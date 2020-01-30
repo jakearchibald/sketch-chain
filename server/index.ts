@@ -19,9 +19,15 @@ import session from 'express-session';
 import fileStoreFactory from 'session-file-store';
 import compressedStatic from 'express-static-gzip';
 
-import { cookieSecret, origin, port, cookieDomain } from './config';
+import {
+  cookieSecret,
+  origin,
+  port,
+  cookieDomain,
+  storageRoot,
+} from './config';
 import { router as authRouter } from './auth';
-import { router as userRouter } from './user';
+import { router as mainRouter } from './main';
 import { abortHandshake } from './utils';
 
 const app = express();
@@ -57,13 +63,13 @@ const sessionParser = session({
     domain: cookieDomain || '',
   },
   store: new FileStore({
-    path: `${process.env.STORAGE_ROOT || './.data'}/storage/sessions`,
+    path: `${storageRoot}/sessions`,
   }),
 });
 
 app.use(sessionParser);
 app.use('/auth/', authRouter);
-app.use('/', userRouter);
+app.use('/', mainRouter);
 
 const server = createServer(app);
 

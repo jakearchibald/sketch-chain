@@ -75,3 +75,11 @@ export function requireSameOrigin(): RequestHandler {
     next();
   };
 }
+
+export function randomInt(max: number) {
+  return Math.floor(Math.random() * max);
+}
+
+export function randomItem<T>(array: T[]): T {
+  return array[randomInt(array.length)];
+}

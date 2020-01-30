@@ -11,31 +11,29 @@
  * limitations under the License.
  */
 import { h, FunctionalComponent } from 'preact';
-import cssURL from 'css:./styles.css';
-import LoginState from 'server/components/login-state';
 
 interface Props {
   user?: UserSession;
 }
 
-const HomePage: FunctionalComponent<Props> = ({ user }) => {
-  return (
-    <html>
-      <head>
-        <title>Test</title>
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        {/* TODO: favicon */}
-        <link rel="stylesheet" href={cssURL} />
-      </head>
-      <body>
-        <h1>Hello!</h1>
-        <LoginState user={user} />
-        <form method="POST" action="/create-game">
-          <button>Create game</button>
+const LoginState: FunctionalComponent<Props> = ({ user }) => {
+  if (user)
+    return (
+      <div>
+        <p>Logged in as {user.name}.</p>
+        <form action="/auth/logout" method="POST">
+          <button>Log out</button>
         </form>
-      </body>
-    </html>
+      </div>
+    );
+  return (
+    <div>
+      <p>Not logged in.</p>
+      <form action="/auth/login" method="POST">
+        <button>Log in</button>
+      </form>
+    </div>
   );
 };
 
-export default HomePage;
+export default LoginState;

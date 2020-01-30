@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { RequestHandler, Router } from 'express';
+import { RequestHandler, Router, Request } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import asyncHandler from 'express-async-handler';
 
@@ -35,18 +35,23 @@ export function requireLogin(): RequestHandler {
   };
 }
 
+export function getLoginRedirectURL(redirectBackTo: string) {
+  const oauth2Client = createClient();
+  return oauth2Client.generateAuthUrl({
+    scope: ['openid', 'email', 'profile'],
+    state: redirectBackTo,
+  });
+}
+
 export const router: Router = Router({
   strict: true,
 });
 
-router.all('/login', (req, res) => {
-  const oauth2Client = createClient();
-  const url = oauth2Client.generateAuthUrl({
-    scope: ['openid', 'email', 'profile'],
-    state: req.query.state || req.get('Referer') || '/',
-  });
-
-  res.redirect(301, url);
+router.post('/login', (req, res) => {
+  res.redirect(
+    301,
+    getLoginRedirectURL(req.query.state || req.get('Referer') || '/'),
+  );
 });
 
 router.post('/logout', (req, res) => {

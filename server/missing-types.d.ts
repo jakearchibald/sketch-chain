@@ -24,12 +24,18 @@ declare module 'css:*' {
   export const inline: string;
 }
 
+declare module 'friendly-words' {
+  export const objects: string[];
+  export const predicates: string[];
+  export const teams: string[];
+  export const collections: string[];
+}
+
 // Types for our session
 declare namespace Express {
   interface Session extends SessionData {
     user?: UserSession;
-    voterId: string;
-    simpleAdminPassword?: string;
+    allowGetCreateGame?: boolean;
   }
 }
 

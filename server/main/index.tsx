@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 Google Inc. All Rights Reserved.
+ * Copyright 2020 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -10,21 +10,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { h } from 'preact';
 import WebSocket from 'ws';
+import expressAsyncHandler from 'express-async-handler';
 
 import { renderPage } from 'server/render';
-import { pingClients } from 'server/utils';
+import { pingClients, requireSameOrigin } from 'server/utils';
 import HomePage from 'server/components/pages/home';
+import { createGame } from 'server/data';
+import { getLoginRedirectURL } from 'server/auth';
 
 export const router: Router = Router({
   strict: true,
 });
 
 router.get('/', (req, res) => {
-  res.status(200).send(renderPage(<HomePage />));
+  const user = req.session!.user;
+  res.status(200).send(renderPage(<HomePage user={user} />));
 });
+
+async function createGameRoute(req: Request, res: Response): Promise<void> {
+  const user = req.session!.user;
+  if (!user) {
+    req.session!.allowGetCreateGame = true;
+    res.redirect(301, getLoginRedirectURL('/create-game'));
+    return;
+  }
+  await createGame(user);
+  res.status(200).send('Game created?');
+}
+
+router.get(
+  '/create-game',
+  expressAsyncHandler((req, res) => {
+    if (!req.session!.allowGetCreateGame) {
+      res.status(403).send('Must use POST request to create game');
+      return;
+    }
+    req.session!.allowGetCreateGame = false;
+    createGameRoute(req, res);
+  }),
+);
+
+router.post(
+  '/create-game',
+  requireSameOrigin(),
+  expressAsyncHandler(createGameRoute),
+);
 
 const wss = new WebSocket.Server({ noServer: true });
 pingClients(wss);
