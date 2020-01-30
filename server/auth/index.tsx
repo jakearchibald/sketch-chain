@@ -10,11 +10,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { RequestHandler, Router, Request } from 'express';
+import { RequestHandler, Router } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import asyncHandler from 'express-async-handler';
 
-import { oauthClientId, oauthClientSecret, origin } from 'server/config';
+import {
+  oauthClientId,
+  oauthClientSecret,
+  origin,
+  devMode,
+} from 'server/config';
+import { createProbablyUniqueName, requireSameOrigin } from 'server/utils';
 
 const createClient = () =>
   new OAuth2Client({
@@ -47,14 +53,32 @@ export const router: Router = Router({
   strict: true,
 });
 
-router.post('/login', (req, res) => {
+router.post('/test-login', requireSameOrigin(), (req, res) => {
+  if (!devMode) {
+    res.status(403).send('Only allowed during dev');
+    return;
+  }
+
+  const id = createProbablyUniqueName();
+
+  req.session!.user = {
+    email: 'foo@bar.com',
+    emailVerified: true,
+    name: id,
+    id,
+  };
+
+  res.redirect(301, '/');
+});
+
+router.post('/login', requireSameOrigin(), (req, res) => {
   res.redirect(
     301,
     getLoginRedirectURL(req.query.state || req.get('Referer') || '/'),
   );
 });
 
-router.post('/logout', (req, res) => {
+router.post('/logout', requireSameOrigin(), (req, res) => {
   req.session!.destroy(() => {
     res.clearCookie('connect.sid', { path: '/' });
     res.redirect(301, '/');

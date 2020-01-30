@@ -10,26 +10,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { collections, predicates, teams, objects } from 'friendly-words';
-
 import { Game, GamePlayer } from './models';
-import { randomItem } from '../utils';
-
-const generateGameId = (() => {
-  const group = [...teams, ...collections];
-  return () =>
-    `${randomItem(predicates)}-${randomItem(objects)}-${randomItem(group)}`;
-})();
+import { createProbablyUniqueName } from 'server/utils';
 
 export async function createGame(user: UserSession) {
-  const game = await Game.create({ id: generateGameId() });
-  await GamePlayer.create({
-    gameId: game.id,
-    userId: user.id,
-    name: user.name,
-    avatar: user.picture,
-    isAdmin: true,
+  while (true) {
+    const id = createProbablyUniqueName();
+
+    // Try again if there's already a game with this ID (highly unlikely)
+    if (await Game.count({ where: { id } })) continue;
+
+    const game = await Game.create({ id });
+
+    game.createGamePlayer({
+      userId: user.id,
+      name: user.name,
+      avatar: user.picture,
+      isAdmin: true,
+    });
+
+    return game.id;
+  }
+}
+
+export function getGame(id: string) {
+  return Game.findByPk(id, { include: [GamePlayer] });
+}
+
+export async function getUsersGames(user: UserSession) {
+  const gamePlayers = await GamePlayer.findAll({
+    where: { userId: user.id },
+    include: [Game],
   });
 
-  return game.id;
+  return gamePlayers.map(gamePlayer => gamePlayer.game!);
 }

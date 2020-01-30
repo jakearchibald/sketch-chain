@@ -18,10 +18,14 @@ import {
   DATE,
   BOOLEAN,
   TEXT,
+  HasManyGetAssociationsMixin,
+  HasManyCountAssociationsMixin,
+  HasManyCreateAssociationMixin,
+  Association,
 } from 'sequelize';
 import { storageRoot } from '../config';
 
-const enum GameState {
+export const enum GameState {
   Open,
   Playing,
   Complete,
@@ -36,10 +40,20 @@ export class Game extends Model {
   endedAt!: Date | null;
   readonly createdAt!: Date;
   readonly updatedAt!: Date;
+  readonly gamePlayers?: GamePlayer[];
+
+  public getGamePlayers!: HasManyGetAssociationsMixin<GamePlayer>; // Note the null assertions!
+  public countGamePlayers!: HasManyCountAssociationsMixin;
+  public createGamePlayer!: HasManyCreateAssociationMixin<GamePlayer>;
+
+  public static associations: {
+    gamePlayers: Association<Game, GamePlayer>;
+  };
 }
+
 Game.init(
   {
-    id: { type: STRING(40), primaryKey: true },
+    id: { type: STRING, primaryKey: true },
     state: { type: INTEGER, allowNull: false, defaultValue: GameState.Open },
     endedAt: { type: DATE, allowNull: true },
     turn: { type: INTEGER, allowNull: false, defaultValue: 0 },
@@ -47,6 +61,7 @@ Game.init(
   {
     sequelize,
     indexes: [{ fields: ['endedAt'] }, { fields: ['createdAt'] }],
+    modelName: 'game',
   },
 );
 
@@ -60,15 +75,11 @@ export class GamePlayer extends Model {
   turnData!: string | null;
   readonly createdAt!: Date;
   readonly updatedAt!: Date;
+  readonly game?: Game;
 }
 
 GamePlayer.init(
   {
-    gameId: {
-      type: STRING,
-      references: { model: Game, key: 'id' },
-      allowNull: false,
-    },
     userId: { type: STRING, allowNull: false },
     name: { type: STRING, allowNull: false },
     avatar: { type: STRING, allowNull: true },
@@ -83,7 +94,11 @@ GamePlayer.init(
       { unique: true, fields: ['gameId', 'order'] },
       { fields: ['userId'] },
     ],
+    modelName: 'gamePlayer',
   },
 );
+
+Game.hasMany(GamePlayer, { foreignKey: { allowNull: false } });
+GamePlayer.belongsTo(Game);
 
 sequelize.sync();

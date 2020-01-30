@@ -28,6 +28,7 @@ import {
 } from './config';
 import { router as authRouter } from './auth';
 import { router as mainRouter } from './main';
+import { router as gameRouter } from './game';
 import { abortHandshake } from './utils';
 
 const app = express();
@@ -69,6 +70,7 @@ const sessionParser = session({
 
 app.use(sessionParser);
 app.use('/auth/', authRouter);
+app.use('/game/', gameRouter);
 app.use('/', mainRouter);
 
 const server = createServer(app);

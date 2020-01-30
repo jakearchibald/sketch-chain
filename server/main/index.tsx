@@ -18,17 +18,21 @@ import expressAsyncHandler from 'express-async-handler';
 import { renderPage } from 'server/render';
 import { pingClients, requireSameOrigin } from 'server/utils';
 import HomePage from 'server/components/pages/home';
-import { createGame } from 'server/data';
+import { createGame, getUsersGames } from 'server/data';
 import { getLoginRedirectURL } from 'server/auth';
 
 export const router: Router = Router({
   strict: true,
 });
 
-router.get('/', (req, res) => {
-  const user = req.session!.user;
-  res.status(200).send(renderPage(<HomePage user={user} />));
-});
+router.get(
+  '/',
+  expressAsyncHandler(async (req, res) => {
+    const user = req.session!.user;
+    const games = user ? await getUsersGames(user) : undefined;
+    res.status(200).send(renderPage(<HomePage user={user} games={games} />));
+  }),
+);
 
 async function createGameRoute(req: Request, res: Response): Promise<void> {
   const user = req.session!.user;
@@ -37,10 +41,12 @@ async function createGameRoute(req: Request, res: Response): Promise<void> {
     res.redirect(301, getLoginRedirectURL('/create-game'));
     return;
   }
-  await createGame(user);
-  res.status(200).send('Game created?');
+  const gameId = await createGame(user);
+  res.redirect(303, `/game/${gameId}/`);
 }
 
+// GET requests to create games are only allowed if we've just sent the user
+// through the login flow. See createGameRoute.
 router.get(
   '/create-game',
   expressAsyncHandler((req, res) => {

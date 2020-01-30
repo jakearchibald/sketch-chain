@@ -12,6 +12,7 @@
  */
 import { Socket } from 'net';
 import { STATUS_CODES } from 'http';
+import { collections, predicates, teams, objects } from 'friendly-words';
 
 import WebSocket, { Server as WebSocketServer } from 'ws';
 import { RequestHandler } from 'express';
@@ -83,3 +84,9 @@ export function randomInt(max: number) {
 export function randomItem<T>(array: T[]): T {
   return array[randomInt(array.length)];
 }
+
+export const createProbablyUniqueName = (() => {
+  const group = [...teams, ...collections];
+  return () =>
+    `${randomItem(predicates)}-${randomItem(objects)}-${randomItem(group)}`;
+})();

@@ -13,12 +13,15 @@
 import { h, FunctionalComponent } from 'preact';
 import cssURL from 'css:./styles.css';
 import LoginState from 'server/components/login-state';
+import { Game } from 'server/data/models';
+import GameList from 'server/components/game-list';
 
 interface Props {
   user?: UserSession;
+  games?: Game[];
 }
 
-const HomePage: FunctionalComponent<Props> = ({ user }) => {
+const HomePage: FunctionalComponent<Props> = ({ user, games }) => {
   return (
     <html>
       <head>
@@ -33,6 +36,16 @@ const HomePage: FunctionalComponent<Props> = ({ user }) => {
         <form method="POST" action="/create-game">
           <button>Create game</button>
         </form>
+        {user && (
+          <div>
+            <h1>Your games</h1>
+            {games && games.length ? (
+              <GameList games={games} />
+            ) : (
+              <p>No games yet.</p>
+            )}
+          </div>
+        )}
       </body>
     </html>
   );

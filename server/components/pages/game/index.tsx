@@ -11,35 +11,31 @@
  * limitations under the License.
  */
 import { h, FunctionalComponent } from 'preact';
-import { devMode } from 'server/config';
+import LoginState from 'server/components/login-state';
+import { Game } from 'server/data/models';
 
 interface Props {
   user?: UserSession;
+  game: Game;
 }
 
-const LoginState: FunctionalComponent<Props> = ({ user }) => {
-  if (user)
-    return (
-      <div>
-        <p>Logged in as {user.name}.</p>
-        <form action="/auth/logout" method="POST">
-          <button>Log out</button>
-        </form>
-      </div>
-    );
+const GamePage: FunctionalComponent<Props> = ({ user, game }) => {
   return (
-    <div>
-      <p>Not logged in.</p>
-      <form action="/auth/login" method="POST">
-        <button>Log in</button>
-      </form>
-      {devMode && (
-        <form action="/auth/test-login" method="POST">
-          <button>Fake log in</button>
+    <html>
+      <head>
+        <title>Game</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        {/* TODO: favicon */}
+      </head>
+      <body>
+        <h1>Hello!</h1>
+        <LoginState user={user} />
+        <form method="POST" action="/create-game">
+          <button>Create game</button>
         </form>
-      )}
-    </div>
+      </body>
+    </html>
   );
 };
 
-export default LoginState;
+export default GamePage;

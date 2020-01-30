@@ -20,6 +20,8 @@ export const origin = (() => {
   return `http://localhost:${port}`;
 })();
 
+export const devMode = origin.startsWith('http://localhost');
+
 export const cookieDomain = process.env.COOKIE_DOMAIN || '';
 
 export const storageRoot = process.env.STORAGE_ROOT || './.data/storage';
