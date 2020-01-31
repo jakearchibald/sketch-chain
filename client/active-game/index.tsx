@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h, hydrate } from 'preact';
+import { h, render } from 'preact';
 
 import WS from 'client/ws';
 import IncompleteGame from 'shared/components/incomplete-game';
@@ -30,8 +30,10 @@ new WS('ws', message => {
     return;
   }
 
-  hydrate(
-    <IncompleteGame userId={userId} {...(data as GameClientState)} />,
-    gameEl,
-  );
+  setTimeout(() => {
+    render(
+      <IncompleteGame userId={userId} {...(data as GameClientState)} />,
+      gameEl,
+    );
+  }, 4000);
 });

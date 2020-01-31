@@ -26,7 +26,7 @@ interface State {}
 export default class PendingGame extends Component<Props, State> {
   state: State = {};
 
-  render({ players, userId, game, userIsAdmin }: Props, {}: State) {
+  render({ players, userId, game, userIsAdmin }: Props) {
     const userIsInGame = !!(
       userId && players.some(player => player.userId === userId)
     );
@@ -35,7 +35,10 @@ export default class PendingGame extends Component<Props, State> {
       <div>
         <h2>Waiting for players</h2>
         <p>Share this page with others and get them to join.</p>
-        <p>You need {minPlayers} players to start a game.</p>
+        <p>
+          You need {minPlayers} players to start a game, but the more the
+          merrier!
+        </p>
         <h2>Players</h2>
         <ul>
           {players.map(player => (
