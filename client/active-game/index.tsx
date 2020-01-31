@@ -31,7 +31,7 @@ interface State {
 }
 
 class ClientComponent extends Component<Props, State> {
-  state: State = { ...this.props };
+  state: State = { game: this.props.game, players: this.props.players };
 
   constructor(props: Props) {
     super(props);
