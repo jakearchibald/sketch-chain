@@ -57,25 +57,56 @@ router.get(
   }),
 );
 
+function sendErrorResponse(
+  res: Response,
+  status: number,
+  error: string,
+  json: boolean,
+): void {
+  res.status(status);
+
+  if (json) {
+    res.json({ error });
+    return;
+  }
+
+  res.send(error);
+}
+
 async function joinGameRoute(req: Request, res: Response): Promise<void> {
   const user = req.session!.user;
+  const json = !!req.query.json;
 
   if (!user) {
     req.session!.allowGetJoinGame = true;
+
+    if (json) {
+      res.status(200).json({
+        redirectTo: getLoginRedirectURL(req.originalUrl),
+      });
+      return;
+    }
+
     res.redirect(301, getLoginRedirectURL(req.originalUrl));
     return;
   }
 
   const game = await getGame(req.params.gameId);
+
   if (!game) {
-    res.status(404).send('Game not found');
+    sendErrorResponse(res, 404, 'Game not found', json);
     return;
   }
 
   try {
     await joinGame(game, user);
   } catch (err) {
-    res.status(500).send(err.message);
+    sendErrorResponse(res, 500, err.message, json);
+    return;
+  }
+
+  if (json) {
+    res.status(200).json({ ok: true });
     return;
   }
   res.redirect(303, `/game/${game.id}/`);
@@ -106,16 +137,23 @@ router.post(
   requireSameOrigin(),
   requireLogin(),
   expressAsyncHandler(async (req, res) => {
+    const json = !!req.query.json;
+
     const game = await getGame(req.params.gameId);
     if (!game) {
-      res.status(404).send('Game not found');
+      sendErrorResponse(res, 404, 'Game not found', json);
       return;
     }
 
     try {
       await leaveGame(game, req.session!.user!);
     } catch (err) {
-      res.status(500).send(err.message);
+      sendErrorResponse(res, 500, err.message, json);
+      return;
+    }
+
+    if (json) {
+      res.status(200).json({ ok: true });
       return;
     }
     res.redirect(303, `/game/${game.id}/`);

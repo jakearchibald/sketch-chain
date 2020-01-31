@@ -21,12 +21,52 @@ interface Props {
   players: Player[];
 }
 
-interface State {}
+interface State {
+  joining: boolean;
+  leaving: boolean;
+}
 
 export default class PendingGame extends Component<Props, State> {
-  state: State = {};
+  state: State = {
+    joining: false,
+    leaving: false,
+  };
 
-  render({ players, userId, game, userIsAdmin }: Props) {
+  private _onJoinSubmit = async (event: Event) => {
+    // If there's no user, let it navigate through the login process
+    if (!this.props.userId) return;
+    event.preventDefault();
+    this.setState({ joining: true });
+    const response = await fetch('join?json=1', { method: 'POST' });
+    const data = await response.json();
+
+    if (data.redirectTo) {
+      location.href = data.redirectTo;
+      return;
+    }
+
+    if (data.error) {
+      console.error(data.error);
+    }
+
+    this.setState({ joining: false });
+  };
+
+  private _onLeaveSubmit = async (event: Event) => {
+    event.preventDefault();
+    this.setState({ leaving: true });
+    const response = await fetch('leave?json=1', { method: 'POST' });
+    const data = await response.json();
+    if (data.error) {
+      console.error(data.error);
+    }
+    this.setState({ leaving: false });
+  };
+
+  render(
+    { players, userId, game, userIsAdmin }: Props,
+    { joining, leaving }: State,
+  ) {
     const userIsInGame = !!(
       userId && players.some(player => player.userId === userId)
     );
@@ -48,7 +88,12 @@ export default class PendingGame extends Component<Props, State> {
           ))}
         </ul>
         {!userIsInGame ? (
-          <form action={`/game/${game.id}/join`} method="POST">
+          <form
+            action={`/game/${game.id}/join`}
+            method="POST"
+            onSubmit={this._onJoinSubmit}
+            disabled={joining}
+          >
             <button>Join</button>
           </form>
         ) : userIsAdmin ? (
@@ -56,7 +101,12 @@ export default class PendingGame extends Component<Props, State> {
             <button>Cancel game</button>
           </form>
         ) : (
-          <form action={`/game/${game.id}/leave`} method="POST">
+          <form
+            action={`/game/${game.id}/leave`}
+            method="POST"
+            onSubmit={this._onLeaveSubmit}
+            disabled={leaving}
+          >
             <button>Leave</button>
           </form>
         )}
