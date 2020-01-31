@@ -21,34 +21,31 @@ const userId = loginInfo
   ? (loginInfo as HTMLElement).dataset.userId!
   : undefined;
 
-interface Props extends State {
-  setUpdateListener: typeof setUpdateListener;
-}
+let updateListener: ((message: State) => void) | undefined;
+const setUpdateListener = (callback: (message: Partial<State>) => void) =>
+  (updateListener = callback);
 
 interface State {
   game: Game;
   players: Player[];
 }
 
-class ClientComponent extends Component<Props, State> {
-  state: State = { game: this.props.game, players: this.props.players };
+class ClientComponent extends Component<State, State> {
+  state: State = { ...this.props };
 
-  constructor(props: Props) {
+  constructor(props: State) {
     super(props);
-    props.setUpdateListener((data: Partial<State>) => {
+    setUpdateListener((data: Partial<State>) => {
       this.setState(data);
     });
   }
 
-  render(_: Props, { game, players }: State) {
+  render(_: State, { game, players }: State) {
     return <IncompleteGame userId={userId} game={game} players={players} />;
   }
 }
 
 const gameEl = document.querySelector('.game')!;
-let updateCallback: ((message: State) => void) | undefined;
-const setUpdateListener = (callback: (message: Partial<State>) => void) =>
-  (updateCallback = callback);
 
 new WS('ws', message => {
   const data = JSON.parse(message);
@@ -58,16 +55,13 @@ new WS('ws', message => {
     return;
   }
 
-  if (updateCallback) {
-    updateCallback(data);
+  // If this isn't our first update, just call the callback.
+  // ClientComponent will handle the rest.
+  if (updateListener) {
+    updateListener(data);
     return;
   }
 
-  render(
-    <ClientComponent
-      setUpdateListener={setUpdateListener}
-      {...(data as GameClientState)}
-    />,
-    gameEl,
-  );
+  // This is only called once, for the first render.
+  render(<ClientComponent {...(data as GameClientState)} />, gameEl);
 });
