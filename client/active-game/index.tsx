@@ -10,17 +10,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h, render } from 'preact';
+import { h, render, Component } from 'preact';
 
 import WS from 'client/ws';
 import IncompleteGame from 'shared/components/incomplete-game';
-import { GameClientState } from 'shared/types';
+import { GameClientState, Game, Player } from 'shared/types';
 
-const gameEl = document.querySelector('.game')!;
 const loginInfo = document.querySelector('.login-info');
 const userId = loginInfo
   ? (loginInfo as HTMLElement).dataset.userId!
   : undefined;
+
+interface Props extends State {
+  setUpdateListener: typeof setUpdateListener;
+}
+
+interface State {
+  game: Game;
+  players: Player[];
+}
+
+class ClientComponent extends Component<Props, State> {
+  state: State = { ...this.props };
+
+  constructor(props: Props) {
+    super(props);
+    props.setUpdateListener((data: Partial<State>) => {
+      this.setState(data);
+    });
+  }
+
+  render(_: Props, { game, players }: State) {
+    return <IncompleteGame userId={userId} game={game} players={players} />;
+  }
+}
+
+const gameEl = document.querySelector('.game')!;
+let updateCallback: ((message: State) => void) | undefined;
+const setUpdateListener = (callback: (message: Partial<State>) => void) =>
+  (updateCallback = callback);
 
 new WS('ws', message => {
   const data = JSON.parse(message);
@@ -30,10 +58,17 @@ new WS('ws', message => {
     return;
   }
 
-  setTimeout(() => {
-    render(
-      <IncompleteGame userId={userId} {...(data as GameClientState)} />,
-      gameEl,
-    );
-  }, 4000);
+  if (updateCallback) {
+    updateCallback(data);
+    return;
+  }
+
+  console.log('first update');
+  render(
+    <ClientComponent
+      setUpdateListener={setUpdateListener}
+      {...(data as GameClientState)}
+    />,
+    gameEl,
+  );
 });
