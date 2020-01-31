@@ -12,6 +12,7 @@
  */
 import { Game, GamePlayer } from './models';
 import { createProbablyUniqueName } from 'server/utils';
+import { GameState } from 'shared/types';
 
 export async function createGame(user: UserSession) {
   while (true) {
@@ -37,11 +38,33 @@ export function getGame(id: string) {
   return Game.findByPk(id, { include: [GamePlayer] });
 }
 
-export async function getUsersGames(user: UserSession) {
+export interface UserGames {
+  game: Game;
+  waitingOnPlayer: boolean;
+}
+
+export async function getUsersGames(user: UserSession): Promise<UserGames[]> {
   const gamePlayers = await GamePlayer.findAll({
     where: { userId: user.id },
     include: [Game],
   });
 
-  return gamePlayers.map(gamePlayer => gamePlayer.game!);
+  return gamePlayers.map(gamePlayer => ({
+    game: gamePlayer.game!,
+    waitingOnPlayer: gamePlayer.game!.turn === gamePlayer.order,
+  }));
+}
+
+export async function joinGame(game: Game, user: UserSession): Promise<void> {
+  if (game.state !== GameState.Open) throw Error('Game already started');
+  if (!game.gamePlayers) throw TypeError('Missing game.gamePlayers');
+  // Quick exit if player already exists
+  if (game.gamePlayers.some(player => player.userId === user.id)) return;
+
+  await game.createGamePlayer({
+    userId: user.id,
+    name: user.name,
+    avatar: user.picture,
+    isAdmin: false,
+  });
 }

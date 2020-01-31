@@ -93,5 +93,5 @@ async function requiresBuild() {
     fs.writeFile(dataPath, JSON.stringify(results, null, '  '));
   }
 
-  require('./.data/dist');
+  require('./.data/dist/server');
 })();

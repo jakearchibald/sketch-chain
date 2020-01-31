@@ -10,12 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-declare module 'asset-url:*' {
-  const value: string;
-  export default value;
-}
-
-declare module 'consts:isServer' {
-  const value: boolean;
-  export default value;
-}
+/**
+ * How many players must a game have before it can start.
+ */
+export const minPlayers: number = 4;

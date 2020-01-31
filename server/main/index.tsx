@@ -30,7 +30,9 @@ router.get(
   expressAsyncHandler(async (req, res) => {
     const user = req.session!.user;
     const games = user ? await getUsersGames(user) : undefined;
-    res.status(200).send(renderPage(<HomePage user={user} games={games} />));
+    res
+      .status(200)
+      .send(renderPage(<HomePage user={user} userGames={games} />));
   }),
 );
 

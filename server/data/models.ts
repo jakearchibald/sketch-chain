@@ -24,16 +24,11 @@ import {
   Association,
 } from 'sequelize';
 import { storageRoot } from '../config';
-
-export const enum GameState {
-  Open,
-  Playing,
-  Complete,
-}
+import { Game as SharedGame, GameState, Player } from 'shared/types';
 
 const sequelize = new Sequelize(`sqlite:${storageRoot}/db.db`);
 
-export class Game extends Model {
+export class Game extends Model implements SharedGame {
   id!: string;
   state!: GameState;
   turn!: number;
@@ -65,7 +60,7 @@ Game.init(
   },
 );
 
-export class GamePlayer extends Model {
+export class GamePlayer extends Model implements Player {
   gameId!: string;
   userId!: string;
   name!: string;

@@ -22,7 +22,6 @@ import assetPlugin from './lib/asset-plugin';
 import constsPlugin from './lib/consts-plugin';
 import resolveDirsPlugin from './lib/resolve-dirs-plugin';
 import compressPlugin from './lib/compress-plugin';
-import * as consts from './consts';
 
 const isGlitch = 'PROJECT_DOMAIN' in process.env;
 const nullPlugin = {};
@@ -44,7 +43,6 @@ export default async function({ watch }) {
     tsPluginInstance,
     resolveDirsPlugin(['client', 'server', 'shared']),
     assetPlugin(),
-    constsPlugin(consts),
   ];
 
   return {
@@ -63,6 +61,7 @@ export default async function({ watch }) {
         {
           plugins: [
             { resolveFileUrl },
+            constsPlugin({ isServer: false }),
             ...commonPlugins(),
             resolve(),
             terser({ module: true }),
@@ -77,6 +76,7 @@ export default async function({ watch }) {
         resolveFileUrl,
       ),
       cssPlugin(),
+      constsPlugin({ isServer: true }),
       ...commonPlugins(),
       nodeExternalPlugin(),
       compressAssets ? compressPlugin() : nullPlugin,

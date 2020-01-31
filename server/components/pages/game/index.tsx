@@ -12,14 +12,19 @@
  */
 import { h, FunctionalComponent } from 'preact';
 import LoginState from 'server/components/login-state';
-import { Game } from 'server/data/models';
+import { Game, GamePlayer } from 'server/data/models';
+import GameComponent from 'shared/components/game';
 
 interface Props {
   user?: UserSession;
   game: Game;
+  players: GamePlayer[];
 }
 
-const GamePage: FunctionalComponent<Props> = ({ user, game }) => {
+const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => {
+  const userIsAdmin =
+    user && players.find(player => player.isAdmin)!.userId === user.id;
+
   return (
     <html>
       <head>
@@ -30,9 +35,7 @@ const GamePage: FunctionalComponent<Props> = ({ user, game }) => {
       <body>
         <h1>Hello!</h1>
         <LoginState user={user} />
-        <form method="POST" action="/create-game">
-          <button>Create game</button>
-        </form>
+        <GameComponent userId={user && user.id} game={game} players={players} />
       </body>
     </html>
   );

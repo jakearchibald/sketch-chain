@@ -8,7 +8,7 @@
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c --watch",
-    "serve": "COOKIE_SECRET=devonly nodemon --watch .data/dist .data/dist",
+    "serve": "COOKIE_SECRET=devonly nodemon --watch .data/dist/server .data/dist/server",
     "start": "node ./start.js",
     "watchnserve": "npm run build && (npm run watch & npm run serve)"
   },

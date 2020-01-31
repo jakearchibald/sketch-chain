@@ -10,12 +10,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { h } from 'preact';
 
 import { renderPage } from 'server/render';
 import expressAsyncHandler from 'express-async-handler';
-import { getGame } from 'server/data';
+import { getGame, joinGame } from 'server/data';
+import GamePage from 'server/components/pages/game';
+import { getLoginRedirectURL } from 'server/auth';
+import { requireSameOrigin } from 'server/utils';
 
 export const router: Router = Router({
   strict: true,
@@ -30,6 +33,56 @@ router.get(
       return;
     }
 
-    res.send('Found game');
+    const players = game.gamePlayers!;
+
+    res.send(
+      renderPage(
+        <GamePage game={game} players={players} user={req.session!.user} />,
+      ),
+    );
   }),
+);
+
+async function joinGameRoute(req: Request, res: Response): Promise<void> {
+  const user = req.session!.user;
+
+  if (!user) {
+    req.session!.allowGetJoinGame = true;
+    res.redirect(301, getLoginRedirectURL(req.originalUrl));
+    return;
+  }
+
+  const game = await getGame(req.params.gameId);
+  if (!game) {
+    res.status(404).send('Game not found');
+    return;
+  }
+
+  try {
+    await joinGame(game, user);
+  } catch (err) {
+    res.status(500).send(err.message);
+    return;
+  }
+  res.redirect(303, `/game/${game.id}/`);
+}
+
+// GET requests to join games are only allowed if we've just sent the user
+// through the login flow. See joinGameRoute.
+router.get(
+  '/:gameId/join',
+  expressAsyncHandler((req, res) => {
+    if (!req.session!.allowGetJoinGame) {
+      res.status(403).send('Must use POST request to create game');
+      return;
+    }
+    req.session!.allowGetJoinGame = false;
+    joinGameRoute(req, res);
+  }),
+);
+
+router.post(
+  '/:gameId/join',
+  requireSameOrigin(),
+  expressAsyncHandler(joinGameRoute),
 );

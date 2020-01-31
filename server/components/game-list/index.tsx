@@ -11,23 +11,26 @@
  * limitations under the License.
  */
 import { h, FunctionalComponent } from 'preact';
-import { Game, GameState } from 'server/data/models';
+import { GameState } from 'shared/types';
+import { UserGames } from 'server/data';
 
 interface Props {
-  games: Game[];
+  userGames: UserGames[];
 }
 
-const GameList: FunctionalComponent<Props> = ({ games }) => {
+const GameList: FunctionalComponent<Props> = ({ userGames }) => {
   return (
     <ul>
-      {games.map(game => (
+      {userGames.map(userGame => (
         <li>
-          <a href={`/game/${game.id}/`}>
-            {game.id} -{' '}
-            {game.state === GameState.Open
+          <a href={`/game/${userGame.game.id}/`}>
+            {userGame.game.id} -{' '}
+            {userGame.game.state === GameState.Open
               ? 'Waiting for players'
-              : game.state === GameState.Playing
-              ? 'Playing'
+              : userGame.waitingOnPlayer
+              ? 'Waiting on you!'
+              : userGame.game.state === GameState.Playing
+              ? 'Waiting on others'
               : 'Complete'}
           </a>
         </li>

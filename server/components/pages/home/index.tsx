@@ -13,15 +13,15 @@
 import { h, FunctionalComponent } from 'preact';
 import cssURL from 'css:./styles.css';
 import LoginState from 'server/components/login-state';
-import { Game } from 'server/data/models';
 import GameList from 'server/components/game-list';
+import { UserGames } from 'server/data';
 
 interface Props {
   user?: UserSession;
-  games?: Game[];
+  userGames?: UserGames[];
 }
 
-const HomePage: FunctionalComponent<Props> = ({ user, games }) => {
+const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
   return (
     <html>
       <head>
@@ -39,8 +39,8 @@ const HomePage: FunctionalComponent<Props> = ({ user, games }) => {
         {user && (
           <div>
             <h1>Your games</h1>
-            {games && games.length ? (
-              <GameList games={games} />
+            {userGames && userGames.length ? (
+              <GameList userGames={userGames} />
             ) : (
               <p>No games yet.</p>
             )}

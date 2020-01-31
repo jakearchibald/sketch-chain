@@ -10,3 +10,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export const enum GameState {
+  Open,
+  Playing,
+  Complete,
+}
+
+export interface Game {
+  id: string;
+  state: GameState;
+  turn: number;
+}
+
+export interface Player {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  isAdmin: boolean;
+  order: number | null;
+  turnData: string | null;
+}
