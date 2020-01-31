@@ -63,7 +63,6 @@ new WS('ws', message => {
     return;
   }
 
-  console.log('first update');
   render(
     <ClientComponent
       setUpdateListener={setUpdateListener}
