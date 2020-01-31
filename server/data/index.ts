@@ -94,3 +94,8 @@ export async function leaveGame(game: Game, user: UserSession): Promise<void> {
   // Game state must be GameState.Open
   await player.destroy();
 }
+
+export async function cancelGame(game: Game): Promise<void> {
+  if (game.state === GameState.Complete) throw Error('Game already complete');
+  await game.destroy();
+}

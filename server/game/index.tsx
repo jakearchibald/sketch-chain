@@ -15,7 +15,7 @@ import { h } from 'preact';
 
 import { renderPage } from 'server/render';
 import expressAsyncHandler from 'express-async-handler';
-import { getGame, joinGame, leaveGame } from 'server/data';
+import { getGame, joinGame, leaveGame, cancelGame } from 'server/data';
 import GamePage from 'server/components/pages/game';
 import { getLoginRedirectURL } from 'server/auth';
 import { requireSameOrigin } from 'server/utils';
@@ -106,5 +106,32 @@ router.post(
       return;
     }
     res.redirect(303, `/game/${game.id}/`);
+  }),
+);
+
+router.post(
+  '/:gameId/cancel',
+  requireSameOrigin(),
+  requireLogin(),
+  expressAsyncHandler(async (req, res) => {
+    const user = req.session!.user!;
+    const game = await getGame(req.params.gameId);
+    if (!game) {
+      res.status(404).send('Game not found');
+      return;
+    }
+
+    if (game.gamePlayers!.find(player => player.isAdmin)!.userId !== user.id) {
+      res.status(500).send('Only the admin can cancel a game');
+      return;
+    }
+
+    try {
+      await cancelGame(game);
+    } catch (err) {
+      res.status(500).send(err.message);
+      return;
+    }
+    res.redirect(303, `/`);
   }),
 );

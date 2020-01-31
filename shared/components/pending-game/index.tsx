@@ -39,7 +39,7 @@ export default class PendingGame extends Component<Props, State> {
         <h2>Players</h2>
         <ul>
           {players.map(player => (
-            <li>
+            <li key={player.userId}>
               {player.name} {player.isAdmin && '(admin)'}
             </li>
           ))}
@@ -50,7 +50,7 @@ export default class PendingGame extends Component<Props, State> {
           </form>
         ) : userIsAdmin ? (
           <form action={`/game/${game.id}/cancel`} method="POST">
-            <button>Abandon game</button>
+            <button>Cancel game</button>
           </form>
         ) : (
           <form action={`/game/${game.id}/leave`} method="POST">
