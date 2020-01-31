@@ -68,3 +68,29 @@ export async function joinGame(game: Game, user: UserSession): Promise<void> {
     isAdmin: false,
   });
 }
+
+export async function leaveGame(game: Game, user: UserSession): Promise<void> {
+  if (!game.gamePlayers) throw TypeError('Missing game.gamePlayers');
+
+  const player = game.gamePlayers.find(player => player.userId === user.id);
+  if (!player) return;
+
+  if (player.isAdmin) throw Error('Admin cannot leave a game');
+
+  if (game.state === GameState.Complete) {
+    throw Error('Cannot leave a completed game');
+  }
+
+  if (game.state === GameState.Playing) {
+    if (game.turn === player.order) {
+      // TODO: remove player, reorder other players, then pass things onto the next player
+      throw Error('Not implemented');
+    }
+    if (game.turn > player.order!) throw Error('Already played');
+    // TODO: remove player, reorder other players
+    throw Error('Not implemented');
+  }
+
+  // Game state must be GameState.Open
+  await player.destroy();
+}

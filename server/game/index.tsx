@@ -15,10 +15,11 @@ import { h } from 'preact';
 
 import { renderPage } from 'server/render';
 import expressAsyncHandler from 'express-async-handler';
-import { getGame, joinGame } from 'server/data';
+import { getGame, joinGame, leaveGame } from 'server/data';
 import GamePage from 'server/components/pages/game';
 import { getLoginRedirectURL } from 'server/auth';
 import { requireSameOrigin } from 'server/utils';
+import { requireLogin } from 'server/auth';
 
 export const router: Router = Router({
   strict: true,
@@ -85,4 +86,25 @@ router.post(
   '/:gameId/join',
   requireSameOrigin(),
   expressAsyncHandler(joinGameRoute),
+);
+
+router.post(
+  '/:gameId/leave',
+  requireSameOrigin(),
+  requireLogin(),
+  expressAsyncHandler(async (req, res) => {
+    const game = await getGame(req.params.gameId);
+    if (!game) {
+      res.status(404).send('Game not found');
+      return;
+    }
+
+    try {
+      await leaveGame(game, req.session!.user!);
+    } catch (err) {
+      res.status(500).send(err.message);
+      return;
+    }
+    res.redirect(303, `/game/${game.id}/`);
+  }),
 );
