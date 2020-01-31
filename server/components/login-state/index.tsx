@@ -21,7 +21,9 @@ const LoginState: FunctionalComponent<Props> = ({ user }) => {
   if (user)
     return (
       <div>
-        <p>Logged in as {user.name}.</p>
+        <p class="login-info" data-user-id={user.id}>
+          Logged in as {user.name}.
+        </p>
         <form action="/auth/logout" method="POST">
           <button>Log out</button>
         </form>

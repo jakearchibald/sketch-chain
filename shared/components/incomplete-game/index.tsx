@@ -20,7 +20,11 @@ interface Props {
   players: Player[];
 }
 
-const Game: FunctionalComponent<Props> = ({ userId, game, players }) => {
+const IncompleteGame: FunctionalComponent<Props> = ({
+  userId,
+  game,
+  players,
+}) => {
   const userIsAdmin = !!(
     userId && players.find(player => player.isAdmin)!.userId === userId
   );
@@ -34,13 +38,11 @@ const Game: FunctionalComponent<Props> = ({ userId, game, players }) => {
           game={game}
           players={players}
         />
-      ) : game.state === GameState.Playing ? (
-        'TODO show progress of game, or allow player to play'
       ) : (
-        'Show results'
+        'TODO show progress of game, or allow player to play'
       )}
     </div>
   );
 };
 
-export default Game;
+export default IncompleteGame;

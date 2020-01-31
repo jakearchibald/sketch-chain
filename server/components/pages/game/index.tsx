@@ -11,9 +11,13 @@
  * limitations under the License.
  */
 import { h, FunctionalComponent } from 'preact';
+
 import LoginState from 'server/components/login-state';
 import { Game, GamePlayer } from 'server/data/models';
-import GameComponent from 'shared/components/game';
+import IncompleteGame from 'shared/components/incomplete-game';
+import bundleURL, { imports } from 'client-bundle:client/active-game';
+import { GameState } from 'shared/types';
+import { gameToClientState } from 'server/data';
 
 interface Props {
   user?: UserSession;
@@ -21,24 +25,34 @@ interface Props {
   players: GamePlayer[];
 }
 
-const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => {
-  const userIsAdmin =
-    user && players.find(player => player.isAdmin)!.userId === user.id;
-
-  return (
-    <html>
-      <head>
-        <title>Game</title>
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        {/* TODO: favicon */}
-      </head>
-      <body>
-        <h1>Hello!</h1>
-        <LoginState user={user} />
-        <GameComponent userId={user && user.id} game={game} players={players} />
-      </body>
-    </html>
-  );
-};
+const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => (
+  <html>
+    <head>
+      <title>Game</title>
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      {/* TODO: favicon */}
+      {game.state !== GameState.Complete && [
+        <script type="module" src={bundleURL} />,
+        ...imports.map(i => (
+          <link rel="preload" as="script" href={i} crossOrigin="" />
+        )),
+      ]}
+    </head>
+    <body>
+      <h1>Hello!</h1>
+      <LoginState user={user} />
+      <div class="game">
+        {game.state == GameState.Complete ? (
+          'TODO: game complete'
+        ) : (
+          <IncompleteGame
+            userId={user && user.id}
+            {...gameToClientState(game)}
+          />
+        )}
+      </div>
+    </body>
+  </html>
+);
 
 export default GamePage;

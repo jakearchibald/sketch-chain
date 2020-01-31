@@ -28,7 +28,11 @@ import {
 } from './config';
 import { router as authRouter } from './auth';
 import { router as mainRouter } from './main';
-import { router as gameRouter } from './game';
+import {
+  router as gameRouter,
+  upgrade as gameUpgrade,
+  socketPath as gameSocketPath,
+} from './game';
 import { abortHandshake } from './utils';
 
 const app = express();
@@ -78,7 +82,7 @@ const server = createServer(app);
 server.on('upgrade', (req: Request, socket: Socket, head: Buffer) => {
   sessionParser(req, {} as Response, () => {
     const parsedURL = parseURL(req.url);
-    const path = parsedURL.path;
+    const path = parsedURL.path!;
     const reqOrigin = req.headers['origin'];
 
     if (reqOrigin !== origin) {
@@ -86,10 +90,10 @@ server.on('upgrade', (req: Request, socket: Socket, head: Buffer) => {
       return;
     }
 
-    /*if (path === '/ws') {
-      userUpgrade(req, socket, head);
+    if (gameSocketPath.test(path)) {
+      gameUpgrade(req, socket, head);
       return;
-    }*/
+    }
 
     abortHandshake(socket, 404);
   });

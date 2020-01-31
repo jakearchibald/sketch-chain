@@ -10,6 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ *
+ */
 export const enum GameState {
   Open,
   Playing,
@@ -28,5 +31,10 @@ export interface Player {
   avatar: string | null;
   isAdmin: boolean;
   order: number | null;
-  turnData: string | null;
+  turnData?: string | null;
+}
+
+export interface GameClientState {
+  game: Game;
+  players: Player[];
 }

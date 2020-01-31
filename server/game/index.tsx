@@ -10,15 +10,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Socket } from 'net';
+import { parse as parseURL } from 'url';
+
 import { Router, Request, Response } from 'express';
 import { h } from 'preact';
+import WebSocket from 'ws';
+import { pathToRegexp } from 'path-to-regexp';
 
 import { renderPage } from 'server/render';
 import expressAsyncHandler from 'express-async-handler';
-import { getGame, joinGame, leaveGame, cancelGame } from 'server/data';
+import {
+  getGame,
+  joinGame,
+  leaveGame,
+  cancelGame,
+  getGameClientState,
+  removeTurnDataFromState,
+  emitter as dataEmitter,
+} from 'server/data';
 import GamePage from 'server/components/pages/game';
 import { getLoginRedirectURL } from 'server/auth';
-import { requireSameOrigin } from 'server/utils';
+import { requireSameOrigin, pingClients } from 'server/utils';
 import { requireLogin } from 'server/auth';
 
 export const router: Router = Router({
@@ -135,3 +148,86 @@ router.post(
     res.redirect(303, `/`);
   }),
 );
+
+export const socketPath = pathToRegexp('/game/:gameId/ws');
+
+const gameToSockets = new Map<string, WebSocket[]>();
+const socketToUser = new WeakMap<WebSocket, UserSession | undefined>();
+const socketToGameId = new WeakMap<WebSocket, string>();
+const wss = new WebSocket.Server({ noServer: true });
+pingClients(wss);
+
+dataEmitter.on('gamechange', async gameId => {
+  const sockets = gameToSockets.get(gameId);
+  if (!sockets || sockets.length === 0) return;
+  const clientState = await getGameClientState(gameId);
+
+  // Has the game been cancelled?
+  if (!clientState) {
+    const message = JSON.stringify({ cancelled: true });
+
+    for (const socket of sockets) {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(message);
+      }
+    }
+
+    return;
+  }
+
+  const stateMessage = JSON.stringify(clientState);
+  const stateNoTurnDataMessage = JSON.stringify(
+    removeTurnDataFromState(clientState),
+  );
+
+  for (const socket of sockets) {
+    if (socket.readyState !== WebSocket.OPEN) continue;
+
+    const user = socketToUser.get(socket);
+    const userPlayer =
+      user && clientState.players.find(player => player.userId === user.id);
+
+    if (userPlayer && clientState.game.turn === userPlayer.order) {
+      socket.send(stateMessage);
+      return;
+    }
+
+    socket.send(stateNoTurnDataMessage);
+  }
+});
+
+wss.on('connection', async ws => {
+  let clientState = await getGameClientState(socketToGameId.get(ws)!);
+  if (!clientState) return;
+
+  const user = socketToUser.get(ws);
+  const userPlayer =
+    user && clientState.players.find(player => player.userId === user.id);
+
+  // We only send the turn data if it's that user's turn
+  if (!userPlayer || clientState.game.turn !== userPlayer.order) {
+    clientState = removeTurnDataFromState(clientState);
+  }
+
+  ws.send(JSON.stringify(clientState));
+});
+
+export function upgrade(req: Request, socket: Socket, head: Buffer) {
+  const parsedURL = parseURL(req.url);
+  const path = parsedURL.path!;
+
+  wss.handleUpgrade(req, socket, head, ws => {
+    const gameId = socketPath.exec(path)![1];
+
+    if (!gameToSockets.has(gameId)) gameToSockets.set(gameId, []);
+    const sockets = gameToSockets.get(gameId)!;
+    sockets.push(ws);
+    socketToUser.set(ws, req.session!.user);
+    socketToGameId.set(ws, gameId);
+
+    ws.once('close', () => {
+      sockets.splice(sockets.indexOf(ws), 1);
+    });
+    wss.emit('connection', ws, req);
+  });
+}

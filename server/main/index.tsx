@@ -12,11 +12,10 @@
  */
 import { Router, Request, Response } from 'express';
 import { h } from 'preact';
-import WebSocket from 'ws';
 import expressAsyncHandler from 'express-async-handler';
 
 import { renderPage } from 'server/render';
-import { pingClients, requireSameOrigin } from 'server/utils';
+import { requireSameOrigin } from 'server/utils';
 import HomePage from 'server/components/pages/home';
 import { createGame, getUsersGames } from 'server/data';
 import { getLoginRedirectURL } from 'server/auth';
@@ -66,18 +65,3 @@ router.post(
   requireSameOrigin(),
   expressAsyncHandler(createGameRoute),
 );
-
-const wss = new WebSocket.Server({ noServer: true });
-pingClients(wss);
-
-/*wss.on('connection', ws => {
-  ws.on('message', data => {
-  });
-});
-
-export function upgrade(req: Request, socket: Socket, head: Buffer) {
-  wss.handleUpgrade(req, socket, head, ws => {
-    wss.emit('connection', ws, req);
-  });
-}
-*/

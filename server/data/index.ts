@@ -10,9 +10,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Game, GamePlayer } from './models';
+import { EventEmitter } from 'events';
+
+import { Game, GamePlayer } from 'server/data/models';
 import { createProbablyUniqueName } from 'server/utils';
-import { GameState } from 'shared/types';
+import { GameState, GameClientState, Player } from 'shared/types';
+
+type GameChangeCallback = (gameId: string) => void;
+
+interface DataEmitter extends EventEmitter {
+  addListener(event: 'gamechange', callback: GameChangeCallback): this;
+  emit(event: 'gamechange', ...args: Parameters<GameChangeCallback>): boolean;
+  on(event: 'gamechange', callback: GameChangeCallback): this;
+  once(event: 'gamechange', callback: GameChangeCallback): this;
+  prependListener(event: 'gamechange', callback: GameChangeCallback): this;
+  prependOnceListener(event: 'gamechange', callback: GameChangeCallback): this;
+  removeListener(event: 'gamechange', callback: GameChangeCallback): this;
+}
+
+export const emitter: DataEmitter = new EventEmitter();
+
+function gameChanged(gameId: string) {
+  emitter.emit('gamechange', gameId);
+}
 
 export async function createGame(user: UserSession) {
   while (true) {
@@ -35,7 +55,10 @@ export async function createGame(user: UserSession) {
 }
 
 export function getGame(id: string) {
-  return Game.findByPk(id, { include: [GamePlayer] });
+  return Game.findByPk(id, {
+    include: [GamePlayer],
+    order: [[GamePlayer, 'order']],
+  });
 }
 
 export interface UserGames {
@@ -67,6 +90,8 @@ export async function joinGame(game: Game, user: UserSession): Promise<void> {
     avatar: user.picture,
     isAdmin: false,
   });
+
+  gameChanged(game.id);
 }
 
 export async function leaveGame(game: Game, user: UserSession): Promise<void> {
@@ -93,9 +118,59 @@ export async function leaveGame(game: Game, user: UserSession): Promise<void> {
 
   // Game state must be GameState.Open
   await player.destroy();
+  gameChanged(game.id);
 }
 
 export async function cancelGame(game: Game): Promise<void> {
   if (game.state === GameState.Complete) throw Error('Game already complete');
   await game.destroy();
+  gameChanged(game.id);
+}
+
+export async function getGameClientState(
+  id: string,
+): Promise<GameClientState | undefined> {
+  const game = await getGame(id);
+  if (!game) return;
+  return gameToClientState(game);
+}
+
+export function gameToClientState(game: Game): GameClientState {
+  return {
+    game: {
+      id: game.id,
+      state: game.state,
+      turn: game.turn,
+    },
+    players: game.gamePlayers!.map(player => {
+      const playerData: Player = {
+        avatar: player.avatar,
+        isAdmin: player.isAdmin,
+        name: player.name,
+        order: player.order,
+        userId: player.userId,
+      };
+
+      // The turn data for the previous player is needed.
+      if (player.order === game.turn - 1) {
+        playerData.turnData = player.turnData;
+      }
+
+      return playerData;
+    }),
+  };
+}
+
+export function removeTurnDataFromState(
+  state: GameClientState,
+): GameClientState {
+  return {
+    ...state,
+    players: state.players.map(player => {
+      if (!player.turnData) return player;
+      const playerCopy = { ...player };
+      delete playerCopy.turnData;
+      return playerCopy;
+    }),
+  };
 }
