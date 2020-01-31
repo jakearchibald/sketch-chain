@@ -68,7 +68,7 @@ router.post('/test-login', requireSameOrigin(), (req, res) => {
     id,
   };
 
-  res.redirect(301, '/');
+  res.redirect(301, req.get('Referer') || '/');
 });
 
 router.post('/login', requireSameOrigin(), (req, res) => {
@@ -81,7 +81,7 @@ router.post('/login', requireSameOrigin(), (req, res) => {
 router.post('/logout', requireSameOrigin(), (req, res) => {
   req.session!.destroy(() => {
     res.clearCookie('connect.sid', { path: '/' });
-    res.redirect(301, '/');
+    res.redirect(301, req.get('Referer') || '/');
   });
 });
 
