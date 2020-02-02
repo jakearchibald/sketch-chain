@@ -13,7 +13,7 @@
 import { Socket } from 'net';
 import { parse as parseURL } from 'url';
 
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, urlencoded } from 'express';
 import { h } from 'preact';
 import WebSocket from 'ws';
 import { pathToRegexp } from 'path-to-regexp';
@@ -137,17 +137,34 @@ router.post(
   '/:gameId/leave',
   requireSameOrigin(),
   requireLogin(),
+  urlencoded({ extended: false }),
   expressAsyncHandler(async (req, res) => {
     const json = !!req.query.json;
-
     const game = await getGame(req.params.gameId);
+
     if (!game) {
       sendErrorResponse(res, 404, 'Game not found', json);
       return;
     }
 
+    const user = req.session!.user!;
+    const toRemove = 'player' in req.body ? String(req.body.player) : user.id;
+
+    if (
+      toRemove !== user.id &&
+      game.gamePlayers!.find(player => player.isAdmin)!.userId !== user.id
+    ) {
+      sendErrorResponse(
+        res,
+        403,
+        'Only the admin can remove others from the game',
+        json,
+      );
+      return;
+    }
+
     try {
-      await leaveGame(game, req.session!.user!);
+      await leaveGame(game, toRemove);
     } catch (err) {
       sendErrorResponse(res, 500, err.message, json);
       return;

@@ -102,7 +102,7 @@ export default class PendingGame extends Component<Props, State> {
         </ul>
         {!userIsInGame ? (
           <form
-            action={`/game/${game.id}/join`}
+            action="join"
             method="POST"
             onSubmit={this._onJoinSubmit}
             disabled={joining}
@@ -110,12 +110,12 @@ export default class PendingGame extends Component<Props, State> {
             <button>Join</button>
           </form>
         ) : userIsAdmin ? (
-          <form action={`/game/${game.id}/cancel`} method="POST">
+          <form action="cancel" method="POST">
             <button>Cancel game</button>
           </form>
         ) : (
           <form
-            action={`/game/${game.id}/leave`}
+            action="leave"
             method="POST"
             onSubmit={this._onLeaveSubmit}
             disabled={leaving}
@@ -125,7 +125,7 @@ export default class PendingGame extends Component<Props, State> {
         )}
         {userIsAdmin && players.length >= minPlayers && (
           <form
-            action={`/game/${game.id}/start`}
+            action="start"
             method="POST"
             onSubmit={this._onStartSubmit}
             disabled={starting}

@@ -96,11 +96,28 @@ export async function joinGame(game: Game, user: UserSession): Promise<void> {
   gameChanged(game.id);
 }
 
-export async function leaveGame(game: Game, user: UserSession): Promise<void> {
+async function handleTurnChange(game: Game, newTurn: number) {
+  if (!game.gamePlayers) throw TypeError('Missing game.gamePlayers');
+  // TODO: this is where notifications will go eventually
+
+  if (newTurn >= game.gamePlayers.length) {
+    return game.update({
+      state: GameState.Complete,
+    });
+  }
+  return game.update({
+    turn: newTurn,
+  });
+}
+
+export async function leaveGame(game: Game, userId: string): Promise<void> {
   if (!game.gamePlayers) throw TypeError('Missing game.gamePlayers');
 
-  const player = game.gamePlayers.find(player => player.userId === user.id);
-  if (!player) return;
+  const playerIndex = game.gamePlayers.findIndex(
+    player => player.userId === userId,
+  );
+  if (playerIndex === -1) return;
+  const player = game.gamePlayers[playerIndex];
 
   if (player.isAdmin) throw Error('Admin cannot leave a game');
 
@@ -109,13 +126,23 @@ export async function leaveGame(game: Game, user: UserSession): Promise<void> {
   }
 
   if (game.state === GameState.Playing) {
-    if (game.turn === player.order) {
-      // TODO: remove player, reorder other players, then pass things onto the next player
-      throw Error('Not implemented');
+    if (game.turn > player.order!) {
+      throw Error('Player cannot be removed if already played');
     }
-    if (game.turn > player.order!) throw Error('Already played');
-    // TODO: remove player, reorder other players
-    throw Error('Not implemented');
+    // Remove player, reorder other players
+    await Promise.all([
+      // If the current player is changing, handle notifications and such
+      player.order === game.turn
+        ? handleTurnChange(game, game.turn)
+        : undefined,
+      // Reorder the remaining players
+      setOrderOnPlayers(game.gamePlayers.slice(playerIndex + 1), {
+        startAt: player.order!,
+      }),
+      player.destroy(),
+    ]);
+    gameChanged(game.id);
+    return;
   }
 
   // Game state must be GameState.Open
@@ -127,6 +154,19 @@ export async function cancelGame(game: Game): Promise<void> {
   if (game.state === GameState.Complete) throw Error('Game already complete');
   await game.destroy();
   gameChanged(game.id);
+}
+
+interface SetOrderOnPlayersOptions {
+  startAt?: number;
+}
+
+function setOrderOnPlayers(
+  players: GamePlayer[],
+  { startAt = 0 }: SetOrderOnPlayersOptions = {},
+): Promise<void> {
+  return Promise.all(
+    players.map((player, i) => player.update({ order: i + startAt })),
+  ).then(() => undefined);
 }
 
 export async function startGame(game: Game): Promise<void> {
@@ -150,7 +190,7 @@ export async function startGame(game: Game): Promise<void> {
     game.update({
       state: GameState.Playing,
     }),
-    ...randomPlayers.map((player, i) => player.update({ order: i })),
+    setOrderOnPlayers(randomPlayers),
   ]);
 
   gameChanged(game.id);

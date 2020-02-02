@@ -26,6 +26,7 @@
     "husky": "^4.2.1",
     "lint-staged": "^10.0.4",
     "nodemon": "^2.0.2",
+    "pointer-tracker": "^2.0.3",
     "postcss": "^7.0.26",
     "postcss-nested": "^4.2.1",
     "postcss-url": "^8.0.0",

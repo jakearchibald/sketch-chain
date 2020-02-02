@@ -13,6 +13,7 @@
 import { h, FunctionalComponent } from 'preact';
 import { Game as GameType, Player, GameState } from 'shared/types';
 import PendingGame from '../pending-game';
+import ActiveGame from '../active-game';
 
 interface Props {
   userId?: string;
@@ -39,7 +40,12 @@ const IncompleteGame: FunctionalComponent<Props> = ({
           players={players}
         />
       ) : (
-        'TODO show progress of game, or allow player to play'
+        <ActiveGame
+          userIsAdmin={userIsAdmin}
+          userId={userId}
+          game={game}
+          players={players}
+        />
       )}
     </div>
   );
