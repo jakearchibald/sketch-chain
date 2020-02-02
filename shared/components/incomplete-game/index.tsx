@@ -26,26 +26,16 @@ const IncompleteGame: FunctionalComponent<Props> = ({
   game,
   players,
 }) => {
-  const userIsAdmin = !!(
-    userId && players.find(player => player.isAdmin)!.userId === userId
-  );
+  const userPlayer = userId
+    ? players.find(player => player.userId === userId)
+    : undefined;
 
   return (
     <div>
       {game.state === GameState.Open ? (
-        <PendingGame
-          userIsAdmin={userIsAdmin}
-          userId={userId}
-          game={game}
-          players={players}
-        />
+        <PendingGame userPlayer={userPlayer} game={game} players={players} />
       ) : (
-        <ActiveGame
-          userIsAdmin={userIsAdmin}
-          userId={userId}
-          game={game}
-          players={players}
-        />
+        <ActiveGame userPlayer={userPlayer} game={game} players={players} />
       )}
     </div>
   );

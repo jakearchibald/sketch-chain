@@ -13,56 +13,21 @@
 import { h, Component } from 'preact';
 import { Game, Player } from 'shared/types';
 import { minPlayers } from 'shared/config';
+import ChangeParticipation from '../change-participation';
 
 interface Props {
-  userId?: string;
-  userIsAdmin: boolean;
+  userPlayer?: Player;
   game: Game;
   players: Player[];
 }
 
 interface State {
-  joining: boolean;
-  leaving: boolean;
   starting: boolean;
 }
 
 export default class PendingGame extends Component<Props, State> {
   state: State = {
-    joining: false,
-    leaving: false,
     starting: false,
-  };
-
-  private _onJoinSubmit = async (event: Event) => {
-    // If there's no user, let it navigate through the login process
-    if (!this.props.userId) return;
-    event.preventDefault();
-    this.setState({ joining: true });
-    const response = await fetch('join?json=1', { method: 'POST' });
-    const data = await response.json();
-
-    if (data.redirectTo) {
-      location.href = data.redirectTo;
-      return;
-    }
-
-    if (data.error) {
-      console.error(data.error);
-    }
-
-    this.setState({ joining: false });
-  };
-
-  private _onLeaveSubmit = async (event: Event) => {
-    event.preventDefault();
-    this.setState({ leaving: true });
-    const response = await fetch('leave?json=1', { method: 'POST' });
-    const data = await response.json();
-    if (data.error) {
-      console.error(data.error);
-    }
-    this.setState({ leaving: false });
   };
 
   private _onStartSubmit = async (event: Event) => {
@@ -76,14 +41,7 @@ export default class PendingGame extends Component<Props, State> {
     this.setState({ starting: false });
   };
 
-  render(
-    { players, userId, game, userIsAdmin }: Props,
-    { joining, leaving, starting }: State,
-  ) {
-    const userIsInGame = !!(
-      userId && players.some(player => player.userId === userId)
-    );
-
+  render({ players, game, userPlayer }: Props, { starting }: State) {
     return (
       <div>
         <h2>Waiting for players</h2>
@@ -100,30 +58,8 @@ export default class PendingGame extends Component<Props, State> {
             </li>
           ))}
         </ul>
-        {!userIsInGame ? (
-          <form
-            action="join"
-            method="POST"
-            onSubmit={this._onJoinSubmit}
-            disabled={joining}
-          >
-            <button>Join</button>
-          </form>
-        ) : userIsAdmin ? (
-          <form action="cancel" method="POST">
-            <button>Cancel game</button>
-          </form>
-        ) : (
-          <form
-            action="leave"
-            method="POST"
-            onSubmit={this._onLeaveSubmit}
-            disabled={leaving}
-          >
-            <button>Leave</button>
-          </form>
-        )}
-        {userIsAdmin && players.length >= minPlayers && (
+        <ChangeParticipation game={game} userPlayer={userPlayer} />
+        {userPlayer?.isAdmin && players.length >= minPlayers && (
           <form
             action="start"
             method="POST"

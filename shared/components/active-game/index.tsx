@@ -12,10 +12,10 @@
  */
 import { h, Component } from 'preact';
 import { Game, Player } from 'shared/types';
+import ChangeParticipation from '../change-participation';
 
 interface Props {
-  userId?: string;
-  userIsAdmin: boolean;
+  userPlayer?: Player;
   game: Game;
   players: Player[];
 }
@@ -43,7 +43,7 @@ export default class ActiveGame extends Component<Props, State> {
     this.setState({ removing: false });
   };
 
-  render({ players, userId, game, userIsAdmin }: Props, { removing }: State) {
+  render({ players, userPlayer, game }: Props, { removing }: State) {
     return (
       <div>
         <h2>Waiting on players</h2>
@@ -51,20 +51,23 @@ export default class ActiveGame extends Component<Props, State> {
           {players.map(player => (
             <li key={player.userId}>
               {player.order === game.turn && '➡️'} {player.name}
-              {userIsAdmin && !player.isAdmin && player.order! >= game.turn && (
-                <form
-                  action="leave"
-                  method="POST"
-                  onSubmit={this._onRemoveSubmit}
-                  disabled={removing}
-                >
-                  <input type="hidden" name="player" value={player.userId} />
-                  <button>Remove</button>
-                </form>
-              )}
+              {userPlayer?.isAdmin &&
+                !player.isAdmin &&
+                player.order! >= game.turn && (
+                  <form
+                    action="leave"
+                    method="POST"
+                    onSubmit={this._onRemoveSubmit}
+                    disabled={removing}
+                  >
+                    <input type="hidden" name="player" value={player.userId} />
+                    <button>Remove</button>
+                  </form>
+                )}
             </li>
           ))}
         </ol>
+        <ChangeParticipation userPlayer={userPlayer} game={game} />
       </div>
     );
   }
