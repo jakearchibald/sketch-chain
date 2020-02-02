@@ -86,7 +86,8 @@ GamePlayer.init(
     sequelize,
     indexes: [
       { unique: true, fields: ['gameId', 'userId'] },
-      { unique: true, fields: ['gameId', 'order'] },
+      // This should be unique, but might not be as the fields are updating
+      { fields: ['gameId', 'order'] },
       { fields: ['userId'] },
     ],
     modelName: 'gamePlayer',

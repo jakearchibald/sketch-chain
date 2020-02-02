@@ -28,6 +28,7 @@ import {
   getGameClientState,
   removeTurnDataFromState,
   emitter as dataEmitter,
+  startGame,
 } from 'server/data';
 import GamePage from 'server/components/pages/game';
 import { getLoginRedirectURL } from 'server/auth';
@@ -173,7 +174,7 @@ router.post(
     }
 
     if (game.gamePlayers!.find(player => player.isAdmin)!.userId !== user.id) {
-      res.status(500).send('Only the admin can cancel a game');
+      res.status(403).send('Only the admin can cancel the game');
       return;
     }
 
@@ -184,6 +185,40 @@ router.post(
       return;
     }
     res.redirect(303, `/`);
+  }),
+);
+
+router.post(
+  '/:gameId/start',
+  requireSameOrigin(),
+  requireLogin(),
+  expressAsyncHandler(async (req, res) => {
+    const json = !!req.query.json;
+    const user = req.session!.user!;
+    const game = await getGame(req.params.gameId);
+    if (!game) {
+      sendErrorResponse(res, 404, 'Game not found', json);
+      return;
+    }
+
+    if (game.gamePlayers!.find(player => player.isAdmin)!.userId !== user.id) {
+      sendErrorResponse(res, 403, 'Only the admin can start the game', json);
+      return;
+    }
+
+    try {
+      await startGame(game);
+    } catch (err) {
+      sendErrorResponse(res, 500, err.message, json);
+      return;
+    }
+
+    if (json) {
+      res.status(200).json({ ok: true });
+      return;
+    }
+
+    res.redirect(303, `/game/${game.id}/`);
   }),
 );
 
@@ -224,13 +259,10 @@ dataEmitter.on('gamechange', async gameId => {
     const user = socketToUser.get(socket);
     const userPlayer =
       user && clientState.players.find(player => player.userId === user.id);
+    const includeTurnData =
+      userPlayer && clientState.game.turn === userPlayer.order;
 
-    if (userPlayer && clientState.game.turn === userPlayer.order) {
-      socket.send(stateMessage);
-      return;
-    }
-
-    socket.send(stateNoTurnDataMessage);
+    socket.send(includeTurnData ? stateMessage : stateNoTurnDataMessage);
   }
 });
 

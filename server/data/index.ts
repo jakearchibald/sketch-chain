@@ -15,6 +15,8 @@ import { EventEmitter } from 'events';
 import { Game, GamePlayer } from 'server/data/models';
 import { createProbablyUniqueName } from 'server/utils';
 import { GameState, GameClientState, Player } from 'shared/types';
+import { minPlayers } from 'shared/config';
+import { randomInt } from '../utils';
 
 type GameChangeCallback = (gameId: string) => void;
 
@@ -124,6 +126,33 @@ export async function leaveGame(game: Game, user: UserSession): Promise<void> {
 export async function cancelGame(game: Game): Promise<void> {
   if (game.state === GameState.Complete) throw Error('Game already complete');
   await game.destroy();
+  gameChanged(game.id);
+}
+
+export async function startGame(game: Game): Promise<void> {
+  if (game.state !== GameState.Open) throw Error('Game already started');
+  if (!game.gamePlayers) throw TypeError('Missing game.gamePlayers');
+  if (game.gamePlayers.length < minPlayers) throw Error('Not enough players');
+
+  const playersToRandomise = [...game.gamePlayers];
+  const randomPlayers: GamePlayer[] = [];
+
+  // Pick players in random order
+  while (playersToRandomise.length !== 0) {
+    const pickedPlayer = playersToRandomise.splice(
+      randomInt(playersToRandomise.length),
+      1,
+    )[0];
+    randomPlayers.push(pickedPlayer);
+  }
+
+  await Promise.all<unknown>([
+    game.update({
+      state: GameState.Playing,
+    }),
+    ...randomPlayers.map((player, i) => player.update({ order: i })),
+  ]);
+
   gameChanged(game.id);
 }
 

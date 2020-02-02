@@ -24,12 +24,14 @@ interface Props {
 interface State {
   joining: boolean;
   leaving: boolean;
+  starting: boolean;
 }
 
 export default class PendingGame extends Component<Props, State> {
   state: State = {
     joining: false,
     leaving: false,
+    starting: false,
   };
 
   private _onJoinSubmit = async (event: Event) => {
@@ -63,9 +65,20 @@ export default class PendingGame extends Component<Props, State> {
     this.setState({ leaving: false });
   };
 
+  private _onStartSubmit = async (event: Event) => {
+    event.preventDefault();
+    this.setState({ starting: true });
+    const response = await fetch('start?json=1', { method: 'POST' });
+    const data = await response.json();
+    if (data.error) {
+      console.error(data.error);
+    }
+    this.setState({ starting: false });
+  };
+
   render(
     { players, userId, game, userIsAdmin }: Props,
-    { joining, leaving }: State,
+    { joining, leaving, starting }: State,
   ) {
     const userIsInGame = !!(
       userId && players.some(player => player.userId === userId)
@@ -108,6 +121,16 @@ export default class PendingGame extends Component<Props, State> {
             disabled={leaving}
           >
             <button>Leave</button>
+          </form>
+        )}
+        {userIsAdmin && players.length >= minPlayers && (
+          <form
+            action={`/game/${game.id}/start`}
+            method="POST"
+            onSubmit={this._onStartSubmit}
+            disabled={starting}
+          >
+            <button>Start</button>
           </form>
         )}
       </div>
