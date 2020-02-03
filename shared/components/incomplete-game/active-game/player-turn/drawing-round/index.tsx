@@ -27,6 +27,45 @@ interface State {
   drawingBegun: boolean;
 }
 
+function drawPoint(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  ctx.beginPath();
+  ctx.arc(x, y, ctx.lineWidth / 2, 0, 2 * Math.PI);
+  ctx.fill();
+}
+
+function drawPathData(
+  data: number[],
+  ctx: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+) {
+  let newPath = true;
+
+  ctx.beginPath();
+
+  for (let i = 0; i < data.length; i++) {
+    const x = data[i];
+    if (x === -1) {
+      ctx.stroke();
+      newPath = true;
+      continue;
+    }
+
+    i++;
+
+    const y = data[i];
+
+    if (newPath) {
+      newPath = false;
+      drawPoint(ctx!, x * canvasWidth, y * canvasHeight);
+      ctx.beginPath();
+    }
+    ctx.lineTo(x * canvasWidth, y * canvasHeight);
+  }
+
+  ctx.stroke();
+}
+
 export default class DrawingRound extends Component<Props, State> {
   state: State = {
     drawingBegun: false,
@@ -68,6 +107,8 @@ export default class DrawingRound extends Component<Props, State> {
     this._context.resetTransform();
     this._context.scale(devicePixelRatio, devicePixelRatio);
     this._context.lineWidth = 3;
+    this._context.lineJoin = 'round';
+    this._context.lineCap = 'round';
     this._context.fillStyle = this._context.strokeStyle = '#000';
   }
 
@@ -95,15 +136,11 @@ export default class DrawingRound extends Component<Props, State> {
         const canvasBounds = canvas.getBoundingClientRect();
         const x = (pointer.clientX - canvasBounds.left) / canvasBounds.width;
         const y = (pointer.clientY - canvasBounds.top) / canvasBounds.height;
-        this._context!.beginPath();
-        this._context!.arc(
+        drawPoint(
+          this._context!,
           x * this._canvasWidth,
           y * this._canvasHeight,
-          this._context!.lineWidth / 2,
-          0,
-          2 * Math.PI,
         );
-        this._context!.fill();
         activePointers.set(pointer.id, [x, y]);
         return true;
       },
@@ -175,47 +212,19 @@ export default class DrawingRound extends Component<Props, State> {
   private _onUndoClick = () => {
     const lastLineEndIndex = this._drawingData!.lastIndexOf(-1);
     if (lastLineEndIndex <= 0) {
-      this._drawingData = [];
+      this._resetCanvas();
+      this.setState({ drawingBegun: false });
+      return;
     } else {
-      this._drawingData!.splice(lastLineEndIndex - 1);
+      this._drawingData!.splice(lastLineEndIndex);
     }
     this._clearCanvas();
-    const data = this._drawingData!;
-    const context = this._context!;
-
-    let newPath = true;
-
-    context.beginPath();
-
-    for (let i = 0; i < data.length; i++) {
-      const x = data[i];
-      if (x === -1) {
-        context.stroke();
-        newPath = true;
-        continue;
-      }
-
-      i++;
-
-      const y = data[i];
-
-      if (newPath) {
-        newPath = false;
-        context.beginPath();
-        context.arc(
-          x * this._canvasWidth,
-          y * this._canvasHeight,
-          context.lineWidth / 2,
-          0,
-          2 * Math.PI,
-        );
-        context.fill();
-        context.beginPath();
-      }
-      context.lineTo(x * this._canvasWidth, y * this._canvasHeight);
-    }
-
-    context.stroke();
+    drawPathData(
+      this._drawingData!,
+      this._context!,
+      this._canvasWidth,
+      this._canvasHeight,
+    );
   };
 
   render(
