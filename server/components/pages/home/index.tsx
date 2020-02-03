@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 import { h, FunctionalComponent } from 'preact';
-import cssURL from 'css:./styles.css';
+import cssURL from 'css:../styles.css';
 import LoginState from 'server/components/login-state';
 import GameList from 'server/components/game-list';
 import { UserGames } from 'server/data';

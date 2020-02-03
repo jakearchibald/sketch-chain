@@ -15,7 +15,7 @@ import { EventEmitter } from 'events';
 import { Game, GamePlayer } from 'server/data/models';
 import { createProbablyUniqueName } from 'server/utils';
 import { GameState, GameClientState, Player } from 'shared/types';
-import { minPlayers } from 'shared/config';
+import { minPlayers, maxDescriptionLength } from 'shared/config';
 import { randomInt } from '../utils';
 
 type GameChangeCallback = (gameId: string) => void;
@@ -96,18 +96,19 @@ export async function joinGame(game: Game, user: UserSession): Promise<void> {
   gameChanged(game.id);
 }
 
-async function handleTurnChange(game: Game, newTurn: number) {
+async function handleTurnChange(game: Game, newTurn: number): Promise<void> {
   if (!game.gamePlayers) throw TypeError('Missing game.gamePlayers');
   // TODO: this is where notifications will go eventually
 
   if (newTurn >= game.gamePlayers.length) {
-    return game.update({
+    await game.update({
       state: GameState.Complete,
     });
+    return;
   }
-  return game.update({
-    turn: newTurn,
-  });
+
+  if (game.turn === newTurn) return;
+  await game.update({ turn: newTurn });
 }
 
 export async function leaveGame(game: Game, userId: string): Promise<void> {
@@ -131,7 +132,8 @@ export async function leaveGame(game: Game, userId: string): Promise<void> {
     }
     // Remove player, reorder other players
     await Promise.all([
-      // If the current player is changing, handle notifications and such
+      // If the current player is changing, handle notifications.
+      // Also, if this is the last player, the game ends.
       player.order === game.turn
         ? handleTurnChange(game, game.turn)
         : undefined,
@@ -193,6 +195,38 @@ export async function startGame(game: Game): Promise<void> {
     setOrderOnPlayers(randomPlayers),
   ]);
 
+  gameChanged(game.id);
+}
+
+export async function playTurn(
+  game: Game,
+  player: GamePlayer,
+  turnData: string,
+): Promise<void> {
+  const trimmedTurnData = turnData.trim();
+
+  if (!game.gamePlayers) throw TypeError('Missing game.gamePlayers');
+  if (game.gamePlayers[player.order!].userId !== player.userId) {
+    throw Error(`You're not a player in this game`);
+  }
+  if (game.turn !== player.order || game.state !== GameState.Playing) {
+    throw Error(`It isn't your turn`);
+  }
+
+  const isDrawing = !!(player.order % 1);
+
+  if (isDrawing) {
+    // TODO validate data
+    throw Error('Not implemented');
+  } else {
+    // Is description
+    if (trimmedTurnData.length > maxDescriptionLength) {
+      throw Error('Description too long');
+    }
+  }
+
+  await player.update({ turnData: trimmedTurnData });
+  await handleTurnChange(game, game.turn + 1);
   gameChanged(game.id);
 }
 

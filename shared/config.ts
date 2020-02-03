@@ -13,4 +13,8 @@
 /**
  * How many players must a game have before it can start.
  */
-export const minPlayers: number = 4;
+export const minPlayers = 4;
+/**
+ * The max length of a subject or drawing description.
+ */
+export const maxDescriptionLength = 100;

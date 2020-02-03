@@ -18,6 +18,7 @@ import IncompleteGame from 'shared/components/incomplete-game';
 import bundleURL, { imports } from 'client-bundle:client/active-game';
 import { GameState } from 'shared/types';
 import { gameToClientState } from 'server/data';
+import cssURL from 'css:../styles.css';
 
 interface Props {
   user?: UserSession;
@@ -31,6 +32,7 @@ const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => (
       <title>Game</title>
       <meta name="viewport" content="width=device-width,initial-scale=1" />
       {/* TODO: favicon */}
+      <link rel="stylesheet" href={cssURL} />
       {game.state !== GameState.Complete && [
         <script type="module" src={bundleURL} />,
         ...imports.map(i => (

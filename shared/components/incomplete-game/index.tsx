@@ -12,8 +12,8 @@
  */
 import { h, FunctionalComponent } from 'preact';
 import { Game as GameType, Player, GameState } from 'shared/types';
-import PendingGame from '../pending-game';
-import ActiveGame from '../active-game';
+import PendingGame from './pending-game';
+import ActiveGame from './active-game';
 
 interface Props {
   userId?: string;

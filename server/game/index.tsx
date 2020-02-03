@@ -29,6 +29,7 @@ import {
   removeTurnDataFromState,
   emitter as dataEmitter,
   startGame,
+  playTurn,
 } from 'server/data';
 import GamePage from 'server/components/pages/game';
 import { getLoginRedirectURL } from 'server/auth';
@@ -225,6 +226,45 @@ router.post(
 
     try {
       await startGame(game);
+    } catch (err) {
+      sendErrorResponse(res, 500, err.message, json);
+      return;
+    }
+
+    if (json) {
+      res.status(200).json({ ok: true });
+      return;
+    }
+
+    res.redirect(303, `/game/${game.id}/`);
+  }),
+);
+
+router.post(
+  '/:gameId/play',
+  requireSameOrigin(),
+  requireLogin(),
+  urlencoded({ extended: false }),
+  expressAsyncHandler(async (req, res) => {
+    const json = !!req.query.json;
+    const user = req.session!.user!;
+    const game = await getGame(req.params.gameId);
+    const turnData = String(req.body.turn);
+
+    if (!game) {
+      sendErrorResponse(res, 404, 'Game not found', json);
+      return;
+    }
+
+    const player = game.gamePlayers!.find(player => player.userId === user.id);
+
+    if (!player) {
+      sendErrorResponse(res, 403, `You're not a player in this game`, json);
+      return;
+    }
+
+    try {
+      await playTurn(game, player, turnData);
     } catch (err) {
       sendErrorResponse(res, 500, err.message, json);
       return;

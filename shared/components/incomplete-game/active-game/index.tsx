@@ -13,6 +13,7 @@
 import { h, Component } from 'preact';
 import { Game, Player } from 'shared/types';
 import ChangeParticipation from '../change-participation';
+import PlayerTurn from './player-turn';
 
 interface Props {
   userPlayer?: Player;
@@ -46,27 +47,38 @@ export default class ActiveGame extends Component<Props, State> {
   render({ players, userPlayer, game }: Props, { removing }: State) {
     return (
       <div>
-        <h2>Waiting on players</h2>
-        <ol>
-          {players.map(player => (
-            <li key={player.userId}>
-              {player.order === game.turn && '➡️'} {player.name}
-              {userPlayer?.isAdmin &&
-                !player.isAdmin &&
-                player.order! >= game.turn && (
-                  <form
-                    action="leave"
-                    method="POST"
-                    onSubmit={this._onRemoveSubmit}
-                    disabled={removing}
-                  >
-                    <input type="hidden" name="player" value={player.userId} />
-                    <button>Remove</button>
-                  </form>
-                )}
-            </li>
-          ))}
-        </ol>
+        {userPlayer?.order! === game.turn ? (
+          <PlayerTurn game={game} userPlayer={userPlayer!} players={players} />
+        ) : (
+          <div>
+            <h2>Taking turns</h2>
+            <ol>
+              {players.map(player => (
+                <li key={player.userId}>
+                  {player.order === game.turn && '➡️'} {player.name}
+                  {userPlayer?.isAdmin &&
+                    !player.isAdmin &&
+                    player.order! >= game.turn && (
+                      <form
+                        action="leave"
+                        method="POST"
+                        onSubmit={this._onRemoveSubmit}
+                        disabled={removing}
+                      >
+                        <input
+                          type="hidden"
+                          name="player"
+                          value={player.userId}
+                        />
+                        <button>Remove</button>
+                      </form>
+                    )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         <ChangeParticipation userPlayer={userPlayer} game={game} />
       </div>
     );

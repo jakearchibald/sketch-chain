@@ -13,3 +13,44 @@
 h1 {
   color: green;
 }
+
+.canvas-container {
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #000;
+}
+
+.drawing-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+}
+
+.allow-canvas-resize {
+  height: 80vh;
+
+  & .drawing-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.canvas-iframe {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.drawing-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
