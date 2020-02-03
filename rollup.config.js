@@ -13,6 +13,7 @@
 import del from 'del';
 import resolve from 'rollup-plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
+import commonjs from '@rollup/plugin-commonjs';
 
 import simpleTS from './lib/simple-ts';
 import clientBundlePlugin from './lib/client-bundle-plugin';
@@ -64,6 +65,7 @@ export default async function({ watch }) {
             constsPlugin({ isServer: false }),
             ...commonPlugins(),
             resolve(),
+            commonjs(),
             terser({ module: true }),
           ],
         },

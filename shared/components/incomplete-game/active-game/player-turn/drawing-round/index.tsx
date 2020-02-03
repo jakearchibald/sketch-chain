@@ -12,6 +12,7 @@
  */
 import { h, Component } from 'preact';
 import PointerTracker from 'pointer-tracker';
+import simplify from 'simplify-js';
 
 import { Player } from 'shared/types';
 import isServer from 'consts:isServer';
@@ -126,7 +127,7 @@ export default class DrawingRound extends Component<Props, State> {
       return;
     }
 
-    const activePointers = new Map<number, number[]>();
+    const activePointers = new Map<number, { x: number; y: number }[]>();
 
     this._pointerTracker = new PointerTracker(canvas, {
       start: pointer => {
@@ -141,7 +142,7 @@ export default class DrawingRound extends Component<Props, State> {
           x * this._canvasWidth,
           y * this._canvasHeight,
         );
-        activePointers.set(pointer.id, [x, y]);
+        activePointers.set(pointer.id, [{ x, y }]);
         return true;
       },
       move: (_, changedPointers) => {
@@ -149,7 +150,7 @@ export default class DrawingRound extends Component<Props, State> {
 
         for (const pointer of changedPointers) {
           const linePoints = activePointers.get(pointer.id)!;
-          const [prevX, prevY] = linePoints.slice(-2);
+          const { x: prevX, y: prevY } = linePoints.slice(-1)[0];
 
           this._context!.beginPath();
           this._context!.lineTo(
@@ -162,7 +163,7 @@ export default class DrawingRound extends Component<Props, State> {
               (finePointer.clientX - canvasBounds.left) / canvasBounds.width;
             const y =
               (finePointer.clientY - canvasBounds.top) / canvasBounds.height;
-            linePoints.push(x, y);
+            linePoints.push({ x, y });
             this._context!.lineTo(
               x * this._canvasWidth,
               y * this._canvasHeight,
@@ -173,12 +174,11 @@ export default class DrawingRound extends Component<Props, State> {
         }
       },
       end: pointer => {
-        const linePoints = activePointers.get(pointer.id)!;
+        const linePoints = simplify(activePointers.get(pointer.id)!, 0.0015);
         activePointers.delete(pointer.id);
-        this._drawingData!.push(-1, ...linePoints);
-        console.log(
-          this._drawingData!.length,
-          (this._drawingData!.length * 32) / 8,
+        this._drawingData!.push(
+          -1,
+          ...linePoints.flatMap(({ x, y }) => [x, y]),
         );
       },
     });

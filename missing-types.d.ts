@@ -19,3 +19,18 @@ declare module 'consts:isServer' {
   const value: boolean;
   export default value;
 }
+
+declare module 'simplify-js' {
+  interface Point {
+    x: number;
+    y: number;
+  }
+
+  function simplify(
+    points: Point[],
+    tolerance?: number,
+    highQuality?: boolean,
+  ): Point[];
+  namespace simplify {}
+  export = simplify;
+}
