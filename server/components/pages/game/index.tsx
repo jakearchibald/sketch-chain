@@ -15,10 +15,16 @@ import { h, FunctionalComponent } from 'preact';
 import LoginState from 'server/components/login-state';
 import { Game, GamePlayer } from 'server/data/models';
 import IncompleteGame from 'shared/components/incomplete-game';
-import bundleURL, { imports } from 'client-bundle:client/active-game';
+import activeBundleURL, {
+  imports as activeImports,
+} from 'client-bundle:client/active-game';
+import completeBundleURL, {
+  imports as completeImports,
+} from 'client-bundle:client/complete-game';
 import { GameState } from 'shared/types';
 import { gameToClientState } from 'server/data';
 import cssURL from 'css:../styles.css';
+import CompleteGame from './complete-game';
 
 interface Props {
   user?: UserSession;
@@ -33,19 +39,26 @@ const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => (
       <meta name="viewport" content="width=device-width,initial-scale=1" />
       {/* TODO: favicon */}
       <link rel="stylesheet" href={cssURL} />
-      {game.state !== GameState.Complete && [
-        <script type="module" src={bundleURL} />,
-        ...imports.map(i => (
-          <link rel="preload" as="script" href={i} crossOrigin="" />
-        )),
-      ]}
+      {game.state !== GameState.Complete
+        ? [
+            <script type="module" src={activeBundleURL} />,
+            ...activeImports.map(i => (
+              <link rel="preload" as="script" href={i} crossOrigin="" />
+            )),
+          ]
+        : [
+            <script type="module" src={completeBundleURL} />,
+            ...completeImports.map(i => (
+              <link rel="preload" as="script" href={i} crossOrigin="" />
+            )),
+          ]}
     </head>
     <body>
       <h1>Hello!</h1>
       <LoginState user={user} />
       <div class="game">
         {game.state == GameState.Complete ? (
-          'TODO: game complete'
+          <CompleteGame game={game} players={players} />
         ) : (
           <IncompleteGame
             userId={user && user.id}

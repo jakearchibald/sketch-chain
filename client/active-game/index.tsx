@@ -14,7 +14,7 @@ import { h, render, Component } from 'preact';
 
 import WS from 'client/ws';
 import IncompleteGame from 'shared/components/incomplete-game';
-import { GameClientState, Game, Player } from 'shared/types';
+import { GameClientState, Game, Player, GameState } from 'shared/types';
 
 const loginInfo = document.querySelector('.login-info');
 const userId = loginInfo
@@ -52,6 +52,11 @@ new WS('ws', message => {
   if (data.cancelled) {
     // TODO: maybe do something more informative?
     location.href = '/';
+    return;
+  }
+
+  if ((data as GameClientState).game.state === GameState.Complete) {
+    location.reload();
     return;
   }
 

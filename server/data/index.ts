@@ -207,12 +207,12 @@ function sanitizeDrawingData(json: string): string {
     throw Error('Invalid JSON');
   }
 
-  const dpr = Number(imageData.dpr);
+  const lineWidth = Number(imageData.lineWidth);
   const width = Math.round(Number(imageData.width));
   const height = Math.round(Number(imageData.height));
   const data = String(imageData.data);
 
-  if (dpr <= 0 || dpr > 8) throw Error('Invalid DPR');
+  if (lineWidth <= 0 || lineWidth > 8) throw Error('Invalid lineWidth');
 
   if (width <= 0 || width > maxImgSize || height <= 0 || height > maxImgSize) {
     throw Error('Invalid image size');
@@ -229,7 +229,7 @@ function sanitizeDrawingData(json: string): string {
     data,
     width,
     height,
-    dpr,
+    lineWidth,
   });
 }
 

@@ -14,6 +14,7 @@ import { h, Component } from 'preact';
 import { Game, Player } from 'shared/types';
 import FirstRound from './first-round';
 import DrawingRound from './drawing-round';
+import DescribeRound from './describe-round';
 
 interface Props {
   game: Game;
@@ -62,7 +63,11 @@ export default class PlayerTurn extends Component<Props, State> {
             submitting={submitting}
           />
         ) : (
-          'Time to describe'
+          <DescribeRound
+            onSubmit={this._onTurnSubmit}
+            previousPlayer={previousPlayer}
+            submitting={submitting}
+          />
         )}
       </div>
     );
