@@ -11,23 +11,19 @@
  * limitations under the License.
  */
 /**
- * How many players must a game have before it can start.
+ *
+ * @param buffer
  */
-export const minPlayers = 4;
-/**
- * The max length of a subject or drawing description.
- */
-export const maxDescriptionLength = 100;
-/**
- * Drawing line width
- */
-export const lineWidth = 3;
-/**
- * Drawing pen up number
- * This is the lowest int16 number
- */
-export const penUp = -32768;
-/**
- * Max image dimension
- */
-export const maxImgSize = 6000;
+export function bufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  return btoa(String.fromCharCode(...bytes));
+}
+
+export function base64ToBuffer(base64: string): ArrayBuffer {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (const [i] of bytes.entries()) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}

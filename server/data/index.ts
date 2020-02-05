@@ -11,11 +11,12 @@
  * limitations under the License.
  */
 import { EventEmitter } from 'events';
+import { Buffer } from 'buffer';
 
 import { Game, GamePlayer } from 'server/data/models';
 import { createProbablyUniqueName } from 'server/utils';
 import { GameState, GameClientState, Player } from 'shared/types';
-import { minPlayers, maxDescriptionLength } from 'shared/config';
+import { minPlayers, maxDescriptionLength, maxImgSize } from 'shared/config';
 import { randomInt } from '../utils';
 
 type GameChangeCallback = (gameId: string) => void;
@@ -198,6 +199,40 @@ export async function startGame(game: Game): Promise<void> {
   gameChanged(game.id);
 }
 
+function sanitizeDrawingData(json: string): string {
+  let imageData;
+  try {
+    imageData = JSON.parse(json);
+  } catch (err) {
+    throw Error('Invalid JSON');
+  }
+
+  const dpr = Number(imageData.dpr);
+  const width = Math.round(Number(imageData.width));
+  const height = Math.round(Number(imageData.height));
+  const data = String(imageData.data);
+
+  if (dpr <= 0 || dpr > 8) throw Error('Invalid DPR');
+
+  if (width <= 0 || width > maxImgSize || height <= 0 || height > maxImgSize) {
+    throw Error('Invalid image size');
+  }
+
+  try {
+    Buffer.from(data, 'base64');
+  } catch (err) {
+    console.error(err);
+    throw Error('Invalid path data');
+  }
+
+  return JSON.stringify({
+    data,
+    width,
+    height,
+    dpr,
+  });
+}
+
 export async function playTurn(
   game: Game,
   player: GamePlayer,
@@ -212,17 +247,18 @@ export async function playTurn(
   if (game.turn !== player.order || game.state !== GameState.Playing) {
     throw Error(`It isn't your turn`);
   }
+  const isDrawing = !!(player.order % 2);
 
-  const isDrawing = !!(player.order % 1);
+  let sanitizedTurnData: string;
 
   if (isDrawing) {
-    // TODO validate data
-    throw Error('Not implemented');
+    sanitizedTurnData = sanitizeDrawingData(trimmedTurnData);
   } else {
     // Is description
     if (trimmedTurnData.length > maxDescriptionLength) {
       throw Error('Description too long');
     }
+    sanitizedTurnData = trimmedTurnData;
   }
 
   await player.update({ turnData: trimmedTurnData });

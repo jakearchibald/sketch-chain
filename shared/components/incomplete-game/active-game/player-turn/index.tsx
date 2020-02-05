@@ -59,7 +59,6 @@ export default class PlayerTurn extends Component<Props, State> {
           <DrawingRound
             onSubmit={this._onTurnSubmit}
             previousPlayer={previousPlayer}
-            nextPlayer={nextPlayer}
             submitting={submitting}
           />
         ) : (

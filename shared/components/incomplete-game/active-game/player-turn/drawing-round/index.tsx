@@ -16,9 +16,10 @@ import simplify from 'simplify-js';
 
 import { Player } from 'shared/types';
 import isServer from 'consts:isServer';
+import { bufferToBase64 } from 'shared/base64';
+import { lineWidth, penUp } from 'shared/config';
 
 interface Props {
-  nextPlayer?: Player;
   previousPlayer: Player;
   submitting: boolean;
   onSubmit: (turnData: string) => void;
@@ -34,19 +35,14 @@ function drawPoint(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.fill();
 }
 
-function drawPathData(
-  data: number[],
-  ctx: CanvasRenderingContext2D,
-  canvasWidth: number,
-  canvasHeight: number,
-) {
+function drawPathData(data: number[], ctx: CanvasRenderingContext2D) {
   let newPath = true;
 
   ctx.beginPath();
 
   for (let i = 0; i < data.length; i++) {
     const x = data[i];
-    if (x === -1) {
+    if (x === penUp) {
       ctx.stroke();
       newPath = true;
       continue;
@@ -58,10 +54,10 @@ function drawPathData(
 
     if (newPath) {
       newPath = false;
-      drawPoint(ctx!, x * canvasWidth, y * canvasHeight);
+      drawPoint(ctx!, x, y);
       ctx.beginPath();
     }
-    ctx.lineTo(x * canvasWidth, y * canvasHeight);
+    ctx.lineTo(x, y);
   }
 
   ctx.stroke();
@@ -74,28 +70,24 @@ export default class DrawingRound extends Component<Props, State> {
 
   private _canvas: HTMLCanvasElement | null = null;
   private _context?: CanvasRenderingContext2D;
-  /** Width before applying dpr */
-  private _canvasWidth: number = 0;
-  /** Height before applying dpr */
-  private _canvasHeight: number = 0;
+  private _dpr: number = 1;
 
   private _iframe: HTMLIFrameElement | null = null;
   private _pointerTracker?: PointerTracker;
 
   /**
-   * This is in the format [x, y, x, y, -1, x, y, x, y, x, y]
-   * Where -1 means pen up.
-   * x & y are 0-1 floats.
+   * This is in the format [x, y, x, y, specialVal, x, y, x, y, x, y]
+   * Special vals are the lowest 10 values in int16
+   * x & y in16 vals.
    */
   private _drawingData?: number[];
 
   private _resetCanvas() {
     const canvas = this._canvas!;
     const canvasBounds = canvas.getBoundingClientRect();
-    this._canvasWidth = Math.round(canvasBounds.width);
-    this._canvasHeight = Math.round(canvasBounds.height);
     canvas.width = Math.round(canvasBounds.width * devicePixelRatio);
     canvas.height = Math.round(canvasBounds.height * devicePixelRatio);
+    this._dpr = devicePixelRatio;
     this._clearCanvas();
     this._drawingData = [];
   }
@@ -106,24 +98,19 @@ export default class DrawingRound extends Component<Props, State> {
     this._context.fillStyle = '#fff';
     this._context.fillRect(0, 0, canvas.width, canvas.height);
     this._context.resetTransform();
-    this._context.scale(devicePixelRatio, devicePixelRatio);
-    this._context.lineWidth = 3;
+    this._context.lineWidth = lineWidth * this._dpr;
     this._context.lineJoin = 'round';
     this._context.lineCap = 'round';
     this._context.fillStyle = this._context.strokeStyle = '#000';
   }
 
   private _canvasMount = (canvas: HTMLCanvasElement | null) => {
-    console.log('Canvas mount');
     this._canvas = canvas;
 
     // TODO: should remove pointer tracker listeners if it exists
 
     if (!canvas) {
       this._context = undefined;
-      console.log(
-        `I'm not entirely sure when this happens yet. Is it when the canvas is removed?`,
-      );
       return;
     }
 
@@ -135,13 +122,9 @@ export default class DrawingRound extends Component<Props, State> {
           this.setState({ drawingBegun: true });
         }
         const canvasBounds = canvas.getBoundingClientRect();
-        const x = (pointer.clientX - canvasBounds.left) / canvasBounds.width;
-        const y = (pointer.clientY - canvasBounds.top) / canvasBounds.height;
-        drawPoint(
-          this._context!,
-          x * this._canvasWidth,
-          y * this._canvasHeight,
-        );
+        const x = Math.round((pointer.clientX - canvasBounds.left) * this._dpr);
+        const y = Math.round((pointer.clientY - canvasBounds.top) * this._dpr);
+        drawPoint(this._context!, x, y);
         activePointers.set(pointer.id, [{ x, y }]);
         return true;
       },
@@ -153,31 +136,27 @@ export default class DrawingRound extends Component<Props, State> {
           const { x: prevX, y: prevY } = linePoints.slice(-1)[0];
 
           this._context!.beginPath();
-          this._context!.lineTo(
-            prevX * this._canvasWidth,
-            prevY * this._canvasHeight,
-          );
+          this._context!.lineTo(prevX, prevY);
 
           for (const finePointer of pointer.getCoalesced()) {
-            const x =
-              (finePointer.clientX - canvasBounds.left) / canvasBounds.width;
-            const y =
-              (finePointer.clientY - canvasBounds.top) / canvasBounds.height;
-            linePoints.push({ x, y });
-            this._context!.lineTo(
-              x * this._canvasWidth,
-              y * this._canvasHeight,
+            const x = Math.round(
+              (finePointer.clientX - canvasBounds.left) * this._dpr,
             );
+            const y = Math.round(
+              (finePointer.clientY - canvasBounds.top) * this._dpr,
+            );
+            linePoints.push({ x, y });
+            this._context!.lineTo(x, y);
           }
 
           this._context!.stroke();
         }
       },
       end: pointer => {
-        const linePoints = simplify(activePointers.get(pointer.id)!, 0.0015);
+        const linePoints = simplify(activePointers.get(pointer.id)!, 1);
         activePointers.delete(pointer.id);
         this._drawingData!.push(
-          -1,
+          penUp,
           ...linePoints.flatMap(({ x, y }) => [x, y]),
         );
       },
@@ -210,7 +189,7 @@ export default class DrawingRound extends Component<Props, State> {
   };
 
   private _onUndoClick = () => {
-    const lastLineEndIndex = this._drawingData!.lastIndexOf(-1);
+    const lastLineEndIndex = this._drawingData!.lastIndexOf(penUp);
     if (lastLineEndIndex <= 0) {
       this._resetCanvas();
       this.setState({ drawingBegun: false });
@@ -219,18 +198,23 @@ export default class DrawingRound extends Component<Props, State> {
       this._drawingData!.splice(lastLineEndIndex);
     }
     this._clearCanvas();
-    drawPathData(
-      this._drawingData!,
-      this._context!,
-      this._canvasWidth,
-      this._canvasHeight,
-    );
+    drawPathData(this._drawingData!, this._context!);
   };
 
-  render(
-    { nextPlayer, previousPlayer, submitting }: Props,
-    { drawingBegun }: State,
-  ) {
+  private _onSendClick = () => {
+    const dataArray = new Int16Array(this._drawingData!);
+    const uint8 = new Uint8Array(dataArray.buffer);
+    const b64 = bufferToBase64(uint8.buffer);
+    const data = JSON.stringify({
+      width: this._canvas!.width,
+      height: this._canvas!.height,
+      dpr: this._dpr,
+      data: b64,
+    });
+    this.props.onSubmit(data);
+  };
+
+  render({ previousPlayer, submitting }: Props, { drawingBegun }: State) {
     return (
       <div>
         <p>
@@ -245,8 +229,18 @@ export default class DrawingRound extends Component<Props, State> {
           <canvas class="drawing-canvas" ref={this._canvasMount} />
           {!isServer && (
             <div class="drawing-controls">
-              <button onClick={this._onClearClick}>Clear</button>
-              <button onClick={this._onUndoClick}>Undo</button>
+              <button onClick={this._onClearClick} disabled={!drawingBegun}>
+                Clear
+              </button>
+              <button onClick={this._onUndoClick} disabled={!drawingBegun}>
+                Undo
+              </button>
+              <button
+                onClick={this._onSendClick}
+                disabled={!drawingBegun || submitting}
+              >
+                Done
+              </button>
             </div>
           )}
         </div>

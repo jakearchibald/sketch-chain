@@ -244,7 +244,7 @@ router.post(
   '/:gameId/play',
   requireSameOrigin(),
   requireLogin(),
-  urlencoded({ extended: false }),
+  urlencoded({ extended: false, limit: '500kb' }),
   expressAsyncHandler(async (req, res) => {
     const json = !!req.query.json;
     const user = req.session!.user!;

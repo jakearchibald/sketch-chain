@@ -1,0 +1,83 @@
+/ Home page:
+  Create room
+    On click it creates a room and redirects there
+
+/game/[random chars]
+  if game doesn't exist 404
+  if not gameStarted
+    List players
+    if not in this game:
+      Form to join game
+    else:
+      if < 4 players
+        waiting for n more players
+      else if admin
+        Start game button
+      else
+        waiting for <admin name> to start game
+      List of connected players
+  if game in progress
+    If current player's turn
+      if first round:
+        Describe something to draw
+        Text field
+        Best: not to easy, not too hard
+        Sometimes combinations work well: eg "A lamp on top of a horse"
+      else if odd round
+        Canvas
+        Clear
+        Done
+      else
+        Image
+        What do you think this is?
+        Text field
+        Submit
+    else
+      Waiting on <player name>
+      if admin:
+        Button to remove player from game (because taking too long)
+  else (game complete)
+    Show progression of game
+    Download button
+
+UserPush
+  userId
+  pushEndpoint
+
+Every hour:
+  Look for games that ended over a day ago. Delete.
+
+Need a data cleanup phase (1 day?)
+V2: Add way to save a 'screenshot'?
+What about 'create room' spam?
+  Could limit room creation to logged in?
+Limit on the size of the image data?
+Use push notifications for your turn & game complete
+Can easily cache previous 100 pages.
+Prevent a user creating too many games.
+Make it a PWA
+Compression urlencoded body before sending, if compressstream is present
+When adding notifications, make sure if the current player is removed, the new current player is notifified
+Add prompts to actions that aren't undoable
+Proper loading states for everything
+How does maxLength work? Make sure the server and JS are in sync with this. Eg, what does an emoji count as?
+Wrap clientside requests in try/catch so they don't break in poor connectivity.
+Are all refs automatically set to null when parent component unmounts?
+Pointer tracker needs a 'remove listeners' method.
+If the pointer doesn't move, no line is created
+It's possible for -1 to appear during drawing. Max it with 0.
+  Same goes for neg 16 values
+Hunt down TODOs and console logs
+When JS enhances a form, use the form action rather than recreating it
+  Maybe create a helper for this? It's pretty repetitive
+PointerTracker needs a way to release listeners
+Compress image turn upload data?
+
+Next step:
+  Do UI for description with previous image
+
+
+
+  Final negative values
+  Handle submit of image data
+
