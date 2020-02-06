@@ -25,6 +25,7 @@ import { GameState } from 'shared/types';
 import { gameToClientState } from 'server/data';
 import cssURL from 'css:../styles.css';
 import CompleteGame from './complete-game';
+import { siteTitle } from 'shared/config';
 
 interface Props {
   user?: UserSession;
@@ -35,7 +36,7 @@ interface Props {
 const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => (
   <html>
     <head>
-      <title>Game</title>
+      <title>{siteTitle} - Game</title>
       <meta name="viewport" content="width=device-width,initial-scale=1" />
       {/* TODO: favicon */}
       <link rel="stylesheet" href={cssURL} />
@@ -54,8 +55,12 @@ const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => (
           ]}
     </head>
     <body>
-      <h1>Hello!</h1>
       <LoginState user={user} />
+      <div class="content-box">
+        <div class="content-padding">
+          <h1 class="site-title">{siteTitle}</h1>
+        </div>
+      </div>
       <div class="game">
         {game.state == GameState.Complete ? (
           <CompleteGame game={game} players={players} />

@@ -14,6 +14,7 @@ import { h, Component } from 'preact';
 import { Game, Player } from 'shared/types';
 import { minPlayers } from 'shared/config';
 import ChangeParticipation from '../change-participation';
+import WhatIsThis from 'shared/components/what-is-this';
 
 interface Props {
   userPlayer?: Player;
@@ -44,21 +45,46 @@ export default class PendingGame extends Component<Props, State> {
   render({ players, game, userPlayer }: Props, { starting }: State) {
     return (
       <div>
-        <h2>Waiting for players</h2>
-        <p>Share this page with others and get them to join.</p>
-        <p>
-          You need {minPlayers} players to start a game, but the more the
-          merrier!
-        </p>
-        <h2>Players</h2>
-        <ul>
-          {players.map(player => (
-            <li key={player.userId}>
-              {player.name} {player.isAdmin && '(admin)'}
-            </li>
-          ))}
-        </ul>
         <ChangeParticipation game={game} userPlayer={userPlayer} />
+        {userPlayer?.isAdmin ? (
+          <div class="content-box">
+            <h2 class="content-box-title">Waiting for players</h2>
+            <div class="content-padding">
+              <p>Share this page with others and get them to join.</p>
+              <p>
+                You need {minPlayers} players to start a game, but the more the
+                merrier!
+              </p>
+            </div>
+          </div>
+        ) : (
+          <WhatIsThis />
+        )}
+        <div class="content-box">
+          <h2 class="content-box-title">Players</h2>
+          <div class="content-padding">
+            <ul class="player-list">
+              {players.map(player => (
+                <li key={player.userId}>
+                  {player.avatar && (
+                    <img
+                      width="40"
+                      height="40"
+                      alt=""
+                      src={`${player.avatar}=s${40}-c`}
+                      srcset={`${player.avatar}=s${80}-c 2x`}
+                      class="player-avatar"
+                    />
+                  )}
+                  <div>
+                    {player.name} {player.isAdmin && '(admin)'}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
         {userPlayer?.isAdmin && players.length >= minPlayers && (
           <form
             action="start"

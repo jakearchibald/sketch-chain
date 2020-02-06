@@ -20,18 +20,20 @@ interface Props {
 
 const GameList: FunctionalComponent<Props> = ({ userGames }) => {
   return (
-    <ul>
+    <ul class="game-list">
       {userGames.map(userGame => (
         <li>
           <a href={`/game/${userGame.game.id}/`}>
-            {userGame.game.id} -{' '}
-            {userGame.game.state === GameState.Open
-              ? 'Waiting for players'
-              : userGame.waitingOnPlayer
-              ? 'Waiting on you!'
-              : userGame.game.state === GameState.Playing
-              ? 'Waiting on others'
-              : 'Complete'}
+            <span class="game-name">{userGame.game.id}</span>
+            <span class="game-state">
+              {userGame.game.state === GameState.Open
+                ? 'Waiting for players'
+                : userGame.waitingOnPlayer
+                ? 'Waiting on you!'
+                : userGame.game.state === GameState.Playing
+                ? 'Waiting on others'
+                : 'Complete'}
+            </span>
           </a>
         </li>
       ))}

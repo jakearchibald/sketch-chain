@@ -14,7 +14,9 @@ import { h, FunctionalComponent } from 'preact';
 import cssURL from 'css:../styles.css';
 import LoginState from 'server/components/login-state';
 import GameList from 'server/components/game-list';
+import WhatIsThis from 'shared/components/what-is-this';
 import { UserGames } from 'server/data';
+import { siteTitle } from 'shared/config';
 
 interface Props {
   user?: UserSession;
@@ -25,27 +27,32 @@ const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
   return (
     <html>
       <head>
-        <title>Test</title>
+        <title>{siteTitle}</title>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         {/* TODO: favicon */}
         <link rel="stylesheet" href={cssURL} />
       </head>
       <body>
-        <h1>Hello!</h1>
         <LoginState user={user} />
-        <form method="POST" action="/create-game">
-          <button>Create game</button>
-        </form>
-        {user && (
-          <div>
-            <h1>Your games</h1>
-            {userGames && userGames.length ? (
-              <GameList userGames={userGames} />
-            ) : (
-              <p>No games yet.</p>
-            )}
+        <div class="content-box">
+          <div class="content-padding">
+            <h1 class="site-title">{siteTitle}</h1>
           </div>
+        </div>
+        <form method="POST" action="/create-game" class="create-game">
+          <button class="button hero-button">Create game</button>
+        </form>
+        {user && userGames && userGames.length ? (
+          <div class="content-box">
+            <h2 class="content-box-title">Your games</h2>
+            <div class="content-padding">
+              <GameList userGames={userGames} />
+            </div>
+          </div>
+        ) : (
+          undefined
         )}
+        <WhatIsThis />
       </body>
     </html>
   );

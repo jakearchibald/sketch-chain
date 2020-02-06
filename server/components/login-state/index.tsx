@@ -18,28 +18,45 @@ interface Props {
 }
 
 const LoginState: FunctionalComponent<Props> = ({ user }) => {
-  if (user)
-    return (
-      <div>
-        <p class="login-info" data-user-id={user.id}>
-          Logged in as {user.name}.
-        </p>
-        <form action="/auth/logout" method="POST">
-          <button>Log out</button>
-        </form>
-      </div>
-    );
   return (
-    <div>
-      <p>Not logged in.</p>
-      <form action="/auth/login" method="POST">
-        <button>Log in</button>
-      </form>
-      {devMode && (
-        <form action="/auth/test-login" method="POST">
-          <button>Fake log in</button>
-        </form>
-      )}
+    <div class="login-details">
+      {user
+        ? [
+            <div class="login-user">
+              {user.picture && (
+                <img
+                  width="40"
+                  height="40"
+                  alt=""
+                  src={`${user.picture}=s${40}-c`}
+                  srcset={`${user.picture}=s${80}-c 2x`}
+                  class="login-avatar login-info"
+                  data-user-id={user.id}
+                />
+              )}
+              <div>{user.name}</div>
+            </div>,
+            <div class="button-row">
+              <form action="/auth/logout" method="POST">
+                <button class="button">Log out</button>
+              </form>
+            </div>,
+          ]
+        : [
+            <div class="login-user">
+              <div>Not logged in</div>
+            </div>,
+            <div class="button-row">
+              <form action="/auth/login" method="POST">
+                <button class="button">Log in</button>
+              </form>
+              {devMode && (
+                <form action="/auth/test-login" method="POST">
+                  <button class="button">Fake log in</button>
+                </form>
+              )}
+            </div>,
+          ]}
     </div>
   );
 };
