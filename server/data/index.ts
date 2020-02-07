@@ -212,7 +212,7 @@ function sanitizeDrawingData(json: string): string {
   const height = Math.round(Number(imageData.height));
   const data = String(imageData.data);
 
-  if (lineWidth <= 0 || lineWidth > 8) throw Error('Invalid lineWidth');
+  if (lineWidth <= 0 || lineWidth > 50) throw Error('Invalid lineWidth');
 
   if (width <= 0 || width > maxImgSize || height <= 0 || height > maxImgSize) {
     throw Error('Invalid image size');
