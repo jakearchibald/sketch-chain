@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h, Component } from 'preact';
+import { h, Component, createRef } from 'preact';
 import PointerTracker from 'pointer-tracker';
 import simplify from 'simplify-js';
 
@@ -26,6 +26,11 @@ import {
   clearCanvas,
 } from 'shared/drawing-canvas-utils';
 
+const mqList =
+  typeof window !== 'undefined'
+    ? window.matchMedia('(min-width: 500px)')
+    : undefined;
+
 interface Props {
   previousPlayer: Player;
   submitting: boolean;
@@ -34,16 +39,22 @@ interface Props {
 
 interface State {
   drawingBegun: boolean;
+  desktopMode: boolean;
+  fallbackFullscreen: boolean;
 }
 
 export default class DrawingRound extends Component<Props, State> {
   state: State = {
     drawingBegun: false,
+    fallbackFullscreen: false,
+    desktopMode: !!mqList && mqList.matches,
   };
 
   private _canvas: HTMLCanvasElement | null = null;
   private _context?: CanvasRenderingContext2D;
   private _pointerTracker?: PointerTracker;
+
+  private _drawingContainer = createRef();
 
   /**
    * This is in the format [x, y, x, y, specialVal, x, y, x, y, x, y]
@@ -67,64 +78,69 @@ export default class DrawingRound extends Component<Props, State> {
       return;
     }
 
-    const activePointers = new Map<number, { x: number; y: number }[]>();
+    requestAnimationFrame(() => {
+      const activePointers = new Map<number, { x: number; y: number }[]>();
 
-    this._pointerTracker = new PointerTracker(canvas, {
-      start: pointer => {
-        if (!this.state.drawingBegun) {
-          this.setState({ drawingBegun: true });
-        }
-        const canvasBounds = canvas.getBoundingClientRect();
-        const x = Math.round(
-          ((pointer.clientX - canvasBounds.left) / canvasBounds.width) *
-            this._canvas!.width,
-        );
-        const y = Math.round(
-          ((pointer.clientY - canvasBounds.top) / canvasBounds.height) *
-            this._canvas!.height,
-        );
-        drawPoint(this._context!, x, y);
-        activePointers.set(pointer.id, [{ x, y }]);
-        return true;
-      },
-      move: (_, changedPointers) => {
-        const canvasBounds = canvas.getBoundingClientRect();
-
-        for (const pointer of changedPointers) {
-          const linePoints = activePointers.get(pointer.id)!;
-          const { x: prevX, y: prevY } = linePoints.slice(-1)[0];
-
-          this._context!.beginPath();
-          this._context!.lineTo(prevX, prevY);
-
-          for (const finePointer of pointer.getCoalesced()) {
-            const x = Math.round(
-              ((finePointer.clientX - canvasBounds.left) / canvasBounds.width) *
-                this._canvas!.width,
-            );
-            const y = Math.round(
-              ((finePointer.clientY - canvasBounds.top) / canvasBounds.height) *
-                this._canvas!.height,
-            );
-            linePoints.push({ x, y });
-            this._context!.lineTo(x, y);
+      this._pointerTracker = new PointerTracker(canvas, {
+        start: pointer => {
+          if (!this.state.drawingBegun) {
+            this.setState({ drawingBegun: true });
           }
+          const canvasBounds = canvas.getBoundingClientRect();
+          const x = Math.round(
+            ((pointer.clientX - canvasBounds.left) / canvasBounds.width) *
+              this._canvas!.width,
+          );
+          const y = Math.round(
+            ((pointer.clientY - canvasBounds.top) / canvasBounds.height) *
+              this._canvas!.height,
+          );
+          drawPoint(this._context!, x, y);
+          activePointers.set(pointer.id, [{ x, y }]);
+          return true;
+        },
+        move: (_, changedPointers) => {
+          const canvasBounds = canvas.getBoundingClientRect();
 
-          this._context!.stroke();
-        }
-      },
-      end: pointer => {
-        const linePoints = simplify(activePointers.get(pointer.id)!, 1);
-        activePointers.delete(pointer.id);
-        this._drawingData!.push(
-          penUp,
-          ...linePoints.flatMap(({ x, y }) => [x, y]),
-        );
-      },
+          for (const pointer of changedPointers) {
+            const linePoints = activePointers.get(pointer.id)!;
+            const { x: prevX, y: prevY } = linePoints.slice(-1)[0];
+
+            this._context!.beginPath();
+            this._context!.lineTo(prevX, prevY);
+
+            for (const finePointer of pointer.getCoalesced()) {
+              const x = Math.round(
+                ((finePointer.clientX - canvasBounds.left) /
+                  canvasBounds.width) *
+                  this._canvas!.width,
+              );
+              const y = Math.round(
+                ((finePointer.clientY - canvasBounds.top) /
+                  canvasBounds.height) *
+                  this._canvas!.height,
+              );
+              linePoints.push({ x, y });
+              this._context!.lineTo(x, y);
+            }
+
+            this._context!.stroke();
+          }
+        },
+        end: pointer => {
+          const linePoints = simplify(activePointers.get(pointer.id)!, 1);
+          activePointers.delete(pointer.id);
+          this._drawingData!.push(
+            penUp,
+            ...linePoints.flatMap(({ x, y }) => [x, y]),
+          );
+        },
+      });
+
+      this._context = canvas.getContext('2d', { alpha: false })!;
+      //debugger;
+      this._resetCanvas();
     });
-
-    this._context = canvas.getContext('2d', { alpha: false })!;
-    this._resetCanvas();
   };
 
   private _iframeWindowResize = () => {
@@ -169,35 +185,96 @@ export default class DrawingRound extends Component<Props, State> {
     this.props.onSubmit(data);
   };
 
-  render({ previousPlayer, submitting }: Props, { drawingBegun }: State) {
+  private _onMqChange = () => {
+    this.setState({ desktopMode: mqList!.matches });
+  };
+
+  private _beginArtingClick = () => {
+    const el = this._drawingContainer.current as HTMLDivElement;
+    if ('requestFullscreen' in el) {
+      el.requestFullscreen();
+      return;
+    }
+    document.documentElement.style.overflow = 'hidden';
+    this.setState({ fallbackFullscreen: true });
+  };
+
+  componentDidMount() {
+    mqList!.addListener(this._onMqChange);
+  }
+
+  componentWillUnmount() {
+    mqList!.removeListener(this._onMqChange);
+  }
+
+  render(
+    { previousPlayer, submitting }: Props,
+    { drawingBegun, desktopMode, fallbackFullscreen }: State,
+  ) {
     return (
       <div>
-        <p>
-          {previousPlayer.name} wants you to draw "{previousPlayer.turnData!}"
-        </p>
+        <div class="content-box">
+          <h2 class="content-box-title">Draw it!</h2>
+          <div class="content-padding">
+            <p>
+              {previousPlayer.name} wants you to draw "
+              {previousPlayer.turnData!}".
+            </p>
+          </div>
+        </div>
+        {!desktopMode && (
+          <div class="hero-button-container">
+            <button class="button hero-button" onClick={this._beginArtingClick}>
+              Begin arting
+            </button>
+          </div>
+        )}
         <div
-          class={`canvas-container ${
-            drawingBegun ? '' : 'allow-canvas-resize'
+          ref={this._drawingContainer}
+          class={`content-box ${
+            desktopMode
+              ? ''
+              : fallbackFullscreen
+              ? 'fallback-fullscreen'
+              : 'drawing-mobile'
           }`}
         >
-          <IframeOnResize onResize={this._iframeWindowResize} />
-          <canvas class="drawing-canvas" ref={this._canvasMount} />
-          {!isServer && (
-            <div class="drawing-controls">
-              <button onClick={this._onClearClick} disabled={!drawingBegun}>
-                Clear
-              </button>
-              <button onClick={this._onUndoClick} disabled={!drawingBegun}>
-                Undo
-              </button>
-              <button
-                onClick={this._onSendClick}
-                disabled={!drawingBegun || submitting}
-              >
-                Done
-              </button>
+          <div
+            class={`drawing-container ${
+              drawingBegun ? '' : 'allow-canvas-resize'
+            }`}
+          >
+            <div class="thing-to-draw">"{previousPlayer.turnData!}"</div>
+            <div class="canvas-container">
+              <IframeOnResize onResize={this._iframeWindowResize} />
+              <canvas class="drawing-canvas" ref={this._canvasMount} />
             </div>
-          )}
+            {!isServer && (
+              <div class="drawing-controls">
+                <button
+                  class="button button-bad"
+                  onClick={this._onClearClick}
+                  disabled={!drawingBegun}
+                >
+                  Clear
+                </button>
+                <button
+                  class="button"
+                  onClick={this._onUndoClick}
+                  disabled={!drawingBegun}
+                >
+                  Undo
+                </button>
+                <button
+                  onClick={this._onSendClick}
+                  disabled={!drawingBegun || submitting}
+                  class="button"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

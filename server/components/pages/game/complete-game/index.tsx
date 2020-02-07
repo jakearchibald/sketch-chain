@@ -21,17 +21,22 @@ interface Props {
 
 const CompleteGame: FunctionalComponent<Props> = ({ game, players }) => (
   <div>
-    <h2>Game: {game.id}</h2>
     <div>
       {players.map((player, i) =>
         i === 0 ? (
-          <div>
-            The game was started by {player.name}, and they chose the topic "
-            {player.turnData}".
+          <div class="content-box">
+            <div class="content-padding">
+              <p>
+                The game was started by {player.name}, and they chose the topic
+                "{player.turnData}".
+              </p>
+            </div>
           </div>
         ) : i % 2 ? (
-          <div>
-            Here's what {player.name} drew:
+          <div class="content-box">
+            <div class="content-padding">
+              <p>Here's what {player.name} drew:</p>
+            </div>
             {(() => {
               const turnData = JSON.parse(player.turnData!);
               return (
@@ -47,8 +52,10 @@ const CompleteGame: FunctionalComponent<Props> = ({ game, players }) => (
             })()}
           </div>
         ) : (
-          <div>
-            {player.name} thought that was "{player.turnData}"
+          <div class="content-box">
+            <div class="content-padding">
+              {player.name} thought that was "{player.turnData}"
+            </div>
           </div>
         ),
       )}

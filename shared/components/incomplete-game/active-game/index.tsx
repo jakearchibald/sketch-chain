@@ -50,32 +50,50 @@ export default class ActiveGame extends Component<Props, State> {
         {userPlayer?.order! === game.turn ? (
           <PlayerTurn game={game} userPlayer={userPlayer!} players={players} />
         ) : (
-          <div>
-            <h2>Taking turns</h2>
-            <ol>
-              {players.map(player => (
-                <li key={player.userId}>
-                  {player.order === game.turn && '➡️'} {player.name}
-                  {userPlayer?.isAdmin &&
-                    !player.isAdmin &&
-                    player.order! >= game.turn && (
-                      <form
-                        action="leave"
-                        method="POST"
-                        onSubmit={this._onRemoveSubmit}
-                        disabled={removing}
-                      >
-                        <input
-                          type="hidden"
-                          name="player"
-                          value={player.userId}
-                        />
-                        <button>Remove</button>
-                      </form>
+          <div class="content-box">
+            <h2 class="content-box-title">Taking turns</h2>
+            <div class="content-padding">
+              <ol class="player-list">
+                {players.map(player => (
+                  <li key={player.userId}>
+                    {player.avatar ? (
+                      <img
+                        width="40"
+                        height="40"
+                        alt=""
+                        src={`${player.avatar}=s${40}-c`}
+                        srcset={`${player.avatar}=s${80}-c 2x`}
+                        class="player-avatar"
+                      />
+                    ) : (
+                      <div />
                     )}
-                </li>
-              ))}
-            </ol>
+                    <div>
+                      {player.name} {player.order === game.turn && '⬅️'}
+                    </div>
+                    <div>
+                      {userPlayer?.isAdmin &&
+                        !player.isAdmin &&
+                        player.order! >= game.turn && (
+                          <form
+                            action="leave"
+                            method="POST"
+                            onSubmit={this._onRemoveSubmit}
+                            disabled={removing}
+                          >
+                            <input
+                              type="hidden"
+                              name="player"
+                              value={player.userId}
+                            />
+                            <button class="button button-bad">Remove</button>
+                          </form>
+                        )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
         )}
 

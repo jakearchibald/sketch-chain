@@ -39,7 +39,7 @@ const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
             <h1 class="site-title">{siteTitle}</h1>
           </div>
         </div>
-        <form method="POST" action="/create-game" class="create-game">
+        <form method="POST" action="/create-game" class="hero-button-container">
           <button class="button hero-button">Create game</button>
         </form>
         {user && userGames && userGames.length ? (

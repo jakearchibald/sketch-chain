@@ -57,8 +57,12 @@ body {
 .content-box {
   background: #fff;
   border: 5px solid #000;
-  margin: 2rem;
+  margin: 1rem;
   box-shadow: 7px 7px #000;
+
+  @media (min-width: 500px) {
+    margin: 2rem;
+  }
 
   & p {
     line-height: 1.4;
@@ -89,7 +93,7 @@ body {
   text-align: center;
 }
 
-.create-game {
+.hero-button-container {
   margin: 3.2rem auto;
   width: max-content;
 }
@@ -99,6 +103,10 @@ body {
   box-shadow: 7px 7px #000;
   border-width: 5px;
   background: #78ff78;
+}
+
+.button-bad {
+  background: #ff7878;
 }
 
 .game-list {
@@ -134,7 +142,7 @@ body {
     border-top: 1px solid #000;
     padding: 1.6rem 0;
     display: grid;
-    grid-template-columns: max-content max-content;
+    grid-template-columns: max-content 1fr max-content;
     grid-gap: 0.5rem;
     align-items: center;
 
@@ -154,10 +162,67 @@ body {
   font-size: 0.9rem;
 }
 
+.large-text-input {
+  font: inherit;
+  border: 3px solid #000;
+  font-size: 1.3rem;
+  padding: 0.5em;
+  min-width: 0;
+}
+
+.input-submit {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+
+  & > .large-text-input {
+    border-right: none;
+  }
+}
+
+.drawing-mobile {
+  display: none;
+
+  &:fullscreen {
+    display: block;
+    margin: 0;
+    border: 0;
+
+    & .allow-canvas-resize {
+      height: 100vh;
+    }
+  }
+}
+
+.fallback-fullscreen {
+  margin: 0;
+  border: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  & .allow-canvas-resize {
+    height: 100vh;
+  }
+}
+
+.drawing-container {
+  display: grid;
+  grid-template-rows: [desc] max-content [canvas] 1fr [buttons] max-content;
+}
+
+.thing-to-draw {
+  grid-row: desc;
+  background: #e2e2e2;
+  padding: 1em;
+  text-align: center;
+}
+
 .canvas-container {
   overflow: hidden;
   position: relative;
-  border: 1px solid #000;
+  grid-row: canvas;
 }
 
 .drawing-canvas {
@@ -194,7 +259,11 @@ body {
 }
 
 .drawing-controls {
-  position: absolute;
-  bottom: 0;
-  left: 0;
+  grid-row: buttons;
+  padding: 1rem;
+  display: grid;
+  grid-auto-columns: max-content;
+  grid-auto-flow: column;
+  grid-gap: 0.5rem;
+  justify-content: end;
 }

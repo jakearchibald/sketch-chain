@@ -48,24 +48,36 @@ export default class DescribeRound extends Component<Props> {
 
     return (
       <div>
-        <form action="play" disabled={submitting} onSubmit={this._onSubmit}>
+        <div class="content-box">
           <CompleteDrawing
             width={this._parsedTurnData!.width}
             height={this._parsedTurnData!.height}
             lineWidth={this._parsedTurnData!.lineWidth}
             pathBase64={this._parsedTurnData!.data}
           />
-          <label>
-            What do you think {previousPlayer.name} drew here?
-            <input
-              type="text"
-              name="turn"
-              required
-              maxLength={maxDescriptionLength}
-            />
-            <button>Send it on</button>
-          </label>
-        </form>
+        </div>
+        <div class="content-box">
+          <h2 class="content-box-title">What is it?</h2>
+          <form
+            action="play"
+            disabled={submitting}
+            onSubmit={this._onSubmit}
+            class="content-padding"
+          >
+            <p>What do you think {previousPlayer.name} drew here?</p>
+            <div class="input-submit">
+              <input
+                class="large-text-input"
+                type="text"
+                name="turn"
+                placeholder="…"
+                required
+                maxLength={maxDescriptionLength}
+              />
+              <button class="button">Send it on</button>
+            </div>
+          </form>
+        </div>
       </div>
     );
   }

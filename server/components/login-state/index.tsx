@@ -30,11 +30,13 @@ const LoginState: FunctionalComponent<Props> = ({ user }) => {
                   alt=""
                   src={`${user.picture}=s${40}-c`}
                   srcset={`${user.picture}=s${80}-c 2x`}
-                  class="login-avatar login-info"
+                  class="login-avatar"
                   data-user-id={user.id}
                 />
               )}
-              <div>{user.name}</div>
+              <div class="login-info" data-user-id={user.id}>
+                {user.name}
+              </div>
             </div>,
             <div class="button-row">
               <form action="/auth/logout" method="POST">

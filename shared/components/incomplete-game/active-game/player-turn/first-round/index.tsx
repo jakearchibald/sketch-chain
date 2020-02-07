@@ -35,20 +35,55 @@ export default class FirstRound extends Component<Props> {
   render({ nextPlayer, submitting }: Props) {
     return (
       <div>
-        <form action="play" disabled={submitting} onSubmit={this._onSubmit}>
-          <label>
-            Describe something for{' '}
-            {nextPlayer ? nextPlayer.name : 'the next plater'} to draw:{' '}
-            <input
-              type="text"
-              name="turn"
-              required
-              maxLength={maxDescriptionLength}
-            />
-            <button>Send it on</button>
-          </label>
-        </form>
-        <p>TODO: first round instructions</p>
+        <div class="content-box">
+          <h2 class="content-box-title">Pick a topic</h2>
+          <form
+            action="play"
+            disabled={submitting}
+            onSubmit={this._onSubmit}
+            class="content-padding"
+          >
+            <p>
+              Describe something for{' '}
+              {nextPlayer ? nextPlayer.name : 'the next plater'} to draw:
+            </p>
+            <div class="input-submit">
+              <input
+                class="large-text-input"
+                type="text"
+                name="turn"
+                placeholder="…"
+                required
+                maxLength={maxDescriptionLength}
+              />
+              <button class="button">Send it on</button>
+            </div>
+          </form>
+        </div>
+        <div class="content-box">
+          <h2 class="content-box-title">How to pick a topic</h2>
+          <div class="content-padding">
+            <p>
+              Avoid things that are too easy to draw. For instance, "cat" or
+              "house" are too easy, but "horse" is much harder.
+            </p>
+            <p>
+              Avoid things that are too vague. "Star wars" has too many
+              representations, meaning the next player will draw something
+              specific, and that specific thing will be described. "Darth vader"
+              would be a better choice.
+            </p>
+            <p>
+              Avoid things that other players might not know. Sure, pick
+              "Benjamin Disraeli" if everyone in the group is a political
+              historian, but otherwise… maybe not.
+            </p>
+            <p>
+              If you want it mix it up a bit, go for an unusual compound topic,
+              like "A dog playing a harp".
+            </p>
+          </div>
+        </div>
       </div>
     );
   }

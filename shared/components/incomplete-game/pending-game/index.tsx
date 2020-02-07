@@ -91,8 +91,9 @@ export default class PendingGame extends Component<Props, State> {
             method="POST"
             onSubmit={this._onStartSubmit}
             disabled={starting}
+            class="hero-button-container"
           >
-            <button>Start</button>
+            <button class="button hero-button">Start</button>
           </form>
         )}
       </div>
