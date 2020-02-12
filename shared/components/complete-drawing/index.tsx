@@ -24,6 +24,7 @@ interface Props {
 interface State {}
 
 export default class CompleteDrawing extends Component<Props, State> {
+  private _canvas?: HTMLCanvasElement | null;
   private _context?: CanvasRenderingContext2D;
   private _cachedPathBase64?: string;
   private _cachedPathData?: Uint16Array;
@@ -33,14 +34,13 @@ export default class CompleteDrawing extends Component<Props, State> {
   };
 
   private _canvasMount = (canvas: HTMLCanvasElement | null) => {
-    if (!canvas) {
-      this._context = undefined;
-      return;
-    }
-
-    this._context = canvas.getContext('2d', { alpha: false })!;
-    this._redrawCanvas();
+    this._canvas = canvas;
   };
+
+  componentDidMount() {
+    this._context = this._canvas!.getContext('2d', { alpha: false })!;
+    this._redrawCanvas();
+  }
 
   private _redrawCanvas() {
     resetCanvas(this._context!, this.props.width, this.props.height);

@@ -180,12 +180,16 @@ body {
 }
 
 .drawing-mobile {
-  display: none;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
 
   &:fullscreen {
     display: block;
     margin: 0;
     border: 0;
+    opacity: 1;
+    pointer-events: auto;
 
     & .allow-canvas-resize {
       height: 100vh;

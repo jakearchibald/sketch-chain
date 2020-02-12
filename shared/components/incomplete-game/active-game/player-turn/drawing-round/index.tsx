@@ -70,67 +70,6 @@ export default class DrawingRound extends Component<Props, State> {
 
   private _canvasMount = (canvas: HTMLCanvasElement | null) => {
     this._canvas = canvas;
-
-    // TODO: should remove pointer tracker listeners if it exists
-
-    if (!canvas) {
-      this._context = undefined;
-      return;
-    }
-
-    requestAnimationFrame(() => {
-      const activePointers = new Map<number, { x: number; y: number }[]>();
-
-      this._pointerTracker = new PointerTracker(canvas, {
-        start: pointer => {
-          if (!this.state.drawingBegun) {
-            this.setState({ drawingBegun: true });
-          }
-          const canvasBounds = canvas.getBoundingClientRect();
-          const x = Math.round(pointer.clientX - canvasBounds.left);
-          const y = Math.round(pointer.clientY - canvasBounds.top);
-          drawPoint(this._context!, x, y);
-          activePointers.set(pointer.id, [{ x, y }]);
-          return true;
-        },
-        move: (_, changedPointers) => {
-          const canvasBounds = canvas.getBoundingClientRect();
-
-          for (const pointer of changedPointers) {
-            const linePoints = activePointers.get(pointer.id)!;
-            const { x: prevX, y: prevY } = linePoints.slice(-1)[0];
-
-            this._context!.beginPath();
-            this._context!.lineTo(prevX, prevY);
-
-            for (const finePointer of pointer.getCoalesced()) {
-              const x = Math.round(finePointer.clientX - canvasBounds.left);
-              const y = Math.round(finePointer.clientY - canvasBounds.top);
-              linePoints.push({ x, y });
-              this._context!.lineTo(x, y);
-            }
-
-            this._context!.stroke();
-          }
-        },
-        end: pointer => {
-          const { width, height } = canvas.getBoundingClientRect();
-          const linePoints = simplify(activePointers.get(pointer.id)!, 1);
-          activePointers.delete(pointer.id);
-          this._drawingData!.push(
-            penUp,
-            ...linePoints.flatMap(({ x, y }) => [
-              Math.round((x / width) * maxDrawingVal),
-              Math.round((y / height) * maxDrawingVal),
-            ]),
-          );
-        },
-      });
-
-      this._context = canvas.getContext('2d', { alpha: false })!;
-      //debugger;
-      this._resetCanvas();
-    });
   };
 
   private _iframeWindowResize = () => {
@@ -183,10 +122,69 @@ export default class DrawingRound extends Component<Props, State> {
 
   componentDidMount() {
     mqList!.addListener(this._onMqChange);
+
+    const canvas = this._canvas;
+
+    if (!canvas) {
+      this._context = undefined;
+      return;
+    }
+
+    const activePointers = new Map<number, { x: number; y: number }[]>();
+
+    this._pointerTracker = new PointerTracker(canvas, {
+      start: pointer => {
+        if (!this.state.drawingBegun) {
+          this.setState({ drawingBegun: true });
+        }
+        const canvasBounds = canvas.getBoundingClientRect();
+        const x = Math.round(pointer.clientX - canvasBounds.left);
+        const y = Math.round(pointer.clientY - canvasBounds.top);
+        drawPoint(this._context!, x, y);
+        activePointers.set(pointer.id, [{ x, y }]);
+        return true;
+      },
+      move: (_, changedPointers) => {
+        const canvasBounds = canvas.getBoundingClientRect();
+
+        for (const pointer of changedPointers) {
+          const linePoints = activePointers.get(pointer.id)!;
+          const { x: prevX, y: prevY } = linePoints.slice(-1)[0];
+
+          this._context!.beginPath();
+          this._context!.lineTo(prevX, prevY);
+
+          for (const finePointer of pointer.getCoalesced()) {
+            const x = Math.round(finePointer.clientX - canvasBounds.left);
+            const y = Math.round(finePointer.clientY - canvasBounds.top);
+            linePoints.push({ x, y });
+            this._context!.lineTo(x, y);
+          }
+
+          this._context!.stroke();
+        }
+      },
+      end: pointer => {
+        const { width, height } = canvas.getBoundingClientRect();
+        const linePoints = simplify(activePointers.get(pointer.id)!, 1);
+        activePointers.delete(pointer.id);
+        this._drawingData!.push(
+          penUp,
+          ...linePoints.flatMap(({ x, y }) => [
+            Math.round((x / width) * maxDrawingVal),
+            Math.round((y / height) * maxDrawingVal),
+          ]),
+        );
+      },
+    });
+
+    this._context = canvas.getContext('2d', { alpha: false })!;
+    this._resetCanvas();
   }
 
   componentWillUnmount() {
     mqList!.removeListener(this._onMqChange);
+    // TODO: should remove pointer tracker listeners if it exists
   }
 
   render(

@@ -72,14 +72,14 @@ When JS enhances a form, use the form action rather than recreating it
   Maybe create a helper for this? It's pretty repetitive
 PointerTracker needs a way to release listeners
 Compress image turn upload data?
+Reset scroll on dynamic page change.
+Trim image on submission? Add a padding.
 
 Next step:
   Figure out the weird timing issues with canvas mounting.
     Remove raf hack, do it properly.
-
-
-Canvas has drawing width and height
-  Done: setting initial canvas scale
-  Initially layout size
-  But later, it's just there for aspect ratio
+  On the "draw it" screen:
+    It appears blank if the update is via web socket
+    It appears too long on desktop. Its size should be limited.
+      Maybe redo the CSS here. It's really hacky.
 

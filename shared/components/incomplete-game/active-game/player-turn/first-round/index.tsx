@@ -64,7 +64,7 @@ export default class FirstRound extends Component<Props> {
           <h2 class="content-box-title">How to pick a topic</h2>
           <div class="content-padding">
             <p>
-              Avoid things that are too easy to draw. For instance, "cat" or
+              Avoid things that are too easy to draw. For instance, "cat" and
               "house" are too easy, but "horse" is much harder.
             </p>
             <p>
