@@ -77,7 +77,9 @@ export async function getUsersGames(user: UserSession): Promise<UserGames[]> {
 
   return gamePlayers.map(gamePlayer => ({
     game: gamePlayer.game!,
-    waitingOnPlayer: gamePlayer.game!.turn === gamePlayer.order,
+    waitingOnPlayer:
+      gamePlayer.game!.state === GameState.Playing &&
+      gamePlayer.game!.turn === gamePlayer.order,
   }));
 }
 

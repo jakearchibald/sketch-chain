@@ -74,21 +74,12 @@ PointerTracker needs a way to release listeners
 Compress image turn upload data?
 
 Next step:
-  Change image storage
-    Width & height is CSS width and height
-    No brush size
-    uint16
-    Reserve final n values, last one being pen up
-    Other values are x & y position 0-1
   Figure out the weird timing issues with canvas mounting.
     Remove raf hack, do it properly.
 
 
 Canvas has drawing width and height
+  Done: setting initial canvas scale
   Initially layout size
   But later, it's just there for aspect ratio
 
-On reset canvas:
-  Take width and height
-  Set canvas width and height to size * dpr
-  Set scale correctly

@@ -28,11 +28,11 @@ const GameList: FunctionalComponent<Props> = ({ userGames }) => {
             <span class="game-state">
               {userGame.game.state === GameState.Open
                 ? 'Waiting for players'
+                : userGame.game.state === GameState.Complete
+                ? 'Complete'
                 : userGame.waitingOnPlayer
                 ? 'Waiting on you!'
-                : userGame.game.state === GameState.Playing
-                ? 'Waiting on others'
-                : 'Complete'}
+                : 'Waiting on others'}
             </span>
           </a>
         </li>
