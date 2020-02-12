@@ -26,6 +26,58 @@ import {
   clearCanvas,
 } from 'shared/drawing-canvas-utils';
 
+/**
+ * Returns new width and height.
+ */
+function cropDrawingData(
+  width: number,
+  height: number,
+  drawingData: Uint16Array,
+) {
+  const padding = 20;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = 0;
+  let maxY = 0;
+
+  // Get maxes and mins
+  for (let i = 0; i < drawingData.length; i++) {
+    const x = drawingData[i];
+    if (x > maxDrawingVal) continue;
+    i++;
+    const y = drawingData[i];
+
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  }
+
+  // Crop with padding
+  const minXSize = Math.max(0, (minX / maxDrawingVal) * width - padding);
+  const minYSize = Math.max(0, (minY / maxDrawingVal) * height - padding);
+  const maxXSize = Math.min(width, (maxX / maxDrawingVal) * width + padding);
+  const maxYSize = Math.min(height, (maxY / maxDrawingVal) * height + padding);
+  const croppedWidth = maxXSize - minXSize;
+  const croppedHeight = maxYSize - minYSize;
+  const minXVal = (minXSize / width) * maxDrawingVal;
+  const minYVal = (minYSize / height) * maxDrawingVal;
+  const xDiff = width / croppedWidth;
+  const yDiff = height / croppedHeight;
+
+  // Apply the crop
+  for (let i = 0; i < drawingData.length; i++) {
+    const x = drawingData[i];
+    if (x > maxDrawingVal) continue;
+    drawingData[i] = Math.round((x - minXVal) * xDiff);
+    i++;
+    const y = drawingData[i];
+    drawingData[i] = Math.round((y - minYVal) * yDiff);
+  }
+
+  return { width: croppedWidth, height: croppedHeight };
+}
+
 const mqList =
   typeof window !== 'undefined'
     ? window.matchMedia('(min-width: 500px)')
@@ -100,9 +152,19 @@ export default class DrawingRound extends Component<Props, State> {
   private _onSendClick = () => {
     const { width, height } = this._canvas!.getBoundingClientRect();
     const dataArray = new Uint16Array(this._drawingData!);
+    // This mutates dataArray:
+    const { width: finalWidth, height: finalHeight } = cropDrawingData(
+      width,
+      height,
+      dataArray,
+    );
     const uint8 = new Uint8Array(dataArray.buffer);
     const data = bufferToBase64(uint8.buffer);
-    const body = JSON.stringify({ width, height, data });
+    const body = JSON.stringify({
+      width: finalWidth,
+      height: finalHeight,
+      data,
+    });
     this.props.onSubmit(body);
   };
 
@@ -171,8 +233,8 @@ export default class DrawingRound extends Component<Props, State> {
         this._drawingData!.push(
           penUp,
           ...linePoints.flatMap(({ x, y }) => [
-            Math.round((x / width) * maxDrawingVal),
-            Math.round((y / height) * maxDrawingVal),
+            Math.round(Math.min(1, Math.max(0, x / width)) * maxDrawingVal),
+            Math.round(Math.min(1, Math.max(0, y / height)) * maxDrawingVal),
           ]),
         );
       },

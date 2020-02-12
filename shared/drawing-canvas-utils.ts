@@ -61,6 +61,7 @@ export function drawPathData(
       newPath = true;
       continue;
     }
+    if (x > maxDrawingVal) continue;
 
     i++;
 
