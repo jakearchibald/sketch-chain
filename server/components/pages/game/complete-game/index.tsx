@@ -44,7 +44,6 @@ const CompleteGame: FunctionalComponent<Props> = ({ game, players }) => (
                   class="final-drawing-canvas"
                   width={turnData.width}
                   height={turnData.height}
-                  data-line-width={turnData.lineWidth}
                   data-path={turnData.data}
                   style="display: block; width: 100%"
                 />

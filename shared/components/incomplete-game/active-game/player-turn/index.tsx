@@ -11,13 +11,12 @@
  * limitations under the License.
  */
 import { h, Component } from 'preact';
-import { Game, Player } from 'shared/types';
+import { Player } from 'shared/types';
 import FirstRound from './first-round';
 import DrawingRound from './drawing-round';
 import DescribeRound from './describe-round';
 
 interface Props {
-  game: Game;
   players: Player[];
   userPlayer: Player;
 }
@@ -44,7 +43,7 @@ export default class PlayerTurn extends Component<Props, State> {
     this.setState({ submitting: false });
   };
 
-  render({ game, userPlayer, players }: Props, { submitting }: State) {
+  render({ userPlayer, players }: Props, { submitting }: State) {
     const previousPlayer: Player | undefined = players[userPlayer.order! - 1];
     const nextPlayer: Player | undefined = players[userPlayer.order! + 1];
 

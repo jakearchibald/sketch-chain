@@ -10,17 +10,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { lineWidth, penUp } from './config';
+import { lineWidth, penUp, maxDrawingVal } from './config';
 
-export function resetCanvas(ctx: CanvasRenderingContext2D) {
+export function resetCanvas(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+) {
   const canvas = ctx.canvas;
   const canvasBounds = canvas.getBoundingClientRect();
   canvas.width = Math.round(canvasBounds.width * devicePixelRatio);
   canvas.height = Math.round(canvasBounds.height * devicePixelRatio);
-  ctx.lineWidth = lineWidth * devicePixelRatio;
+  ctx.lineWidth = lineWidth;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   ctx.fillStyle = ctx.strokeStyle = '#000';
+  ctx.scale(canvas.width / width, canvas.height / height);
   clearCanvas(ctx);
 }
 
@@ -28,6 +33,7 @@ export function clearCanvas(ctx: CanvasRenderingContext2D) {
   const canvas = ctx.canvas;
   ctx.save();
   ctx.fillStyle = '#fff';
+  ctx.resetTransform();
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 }
@@ -41,12 +47,9 @@ export function drawPoint(ctx: CanvasRenderingContext2D, x: number, y: number) {
 export function drawPathData(
   width: number,
   height: number,
-  data: number[] | Int16Array,
+  data: number[] | Uint16Array,
   ctx: CanvasRenderingContext2D,
 ) {
-  const canvasWidth = ctx.canvas.width;
-  const canvasHeight = ctx.canvas.height;
-
   let newPath = true;
 
   ctx.beginPath();
@@ -61,14 +64,15 @@ export function drawPathData(
 
     i++;
 
-    const y = data[i];
+    const canvasX = (x / maxDrawingVal) * width;
+    const canvasY = (data[i] / maxDrawingVal) * height;
 
     if (newPath) {
       newPath = false;
-      drawPoint(ctx!, (x / width) * canvasWidth, (y / height) * canvasHeight);
+      drawPoint(ctx!, canvasX, canvasY);
       ctx.beginPath();
     }
-    ctx.lineTo((x / width) * canvasWidth, (y / height) * canvasHeight);
+    ctx.lineTo(canvasX, canvasY);
   }
 
   ctx.stroke();

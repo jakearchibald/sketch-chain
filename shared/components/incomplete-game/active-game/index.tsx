@@ -48,7 +48,7 @@ export default class ActiveGame extends Component<Props, State> {
     return (
       <div>
         {userPlayer?.order! === game.turn ? (
-          <PlayerTurn game={game} userPlayer={userPlayer!} players={players} />
+          <PlayerTurn userPlayer={userPlayer!} players={players} />
         ) : (
           <div class="content-box">
             <h2 class="content-box-title">Taking turns</h2>

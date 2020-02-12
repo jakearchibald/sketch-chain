@@ -207,12 +207,9 @@ function sanitizeDrawingData(json: string): string {
     throw Error('Invalid JSON');
   }
 
-  const lineWidth = Number(imageData.lineWidth);
   const width = Math.round(Number(imageData.width));
   const height = Math.round(Number(imageData.height));
   const data = String(imageData.data);
-
-  if (lineWidth <= 0 || lineWidth > 50) throw Error('Invalid lineWidth');
 
   if (width <= 0 || width > maxImgSize || height <= 0 || height > maxImgSize) {
     throw Error('Invalid image size');
@@ -225,12 +222,7 @@ function sanitizeDrawingData(json: string): string {
     throw Error('Invalid path data');
   }
 
-  return JSON.stringify({
-    data,
-    width,
-    height,
-    lineWidth,
-  });
+  return JSON.stringify({ data, width, height });
 }
 
 export async function playTurn(
@@ -261,7 +253,7 @@ export async function playTurn(
     sanitizedTurnData = trimmedTurnData;
   }
 
-  await player.update({ turnData: trimmedTurnData });
+  await player.update({ turnData: sanitizedTurnData });
   await handleTurnChange(game, game.turn + 1);
   gameChanged(game.id);
 }

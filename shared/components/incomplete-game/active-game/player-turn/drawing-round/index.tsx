@@ -17,7 +17,7 @@ import simplify from 'simplify-js';
 import { Player } from 'shared/types';
 import isServer from 'consts:isServer';
 import { bufferToBase64 } from 'shared/base64';
-import { penUp } from 'shared/config';
+import { penUp, maxDrawingVal } from 'shared/config';
 import IframeOnResize from 'shared/components/iframe-on-resize';
 import {
   resetCanvas,
@@ -58,13 +58,13 @@ export default class DrawingRound extends Component<Props, State> {
 
   /**
    * This is in the format [x, y, x, y, specialVal, x, y, x, y, x, y]
-   * Special vals are the lowest 10 values in int16
-   * x & y in16 vals.
+   * Special vals are the highest 10 values in uint16.
    */
   private _drawingData?: number[];
 
   private _resetCanvas() {
-    resetCanvas(this._context!);
+    const { width, height } = this._canvas!.getBoundingClientRect();
+    resetCanvas(this._context!, width, height);
     this._drawingData = [];
   }
 
@@ -87,14 +87,8 @@ export default class DrawingRound extends Component<Props, State> {
             this.setState({ drawingBegun: true });
           }
           const canvasBounds = canvas.getBoundingClientRect();
-          const x = Math.round(
-            ((pointer.clientX - canvasBounds.left) / canvasBounds.width) *
-              this._canvas!.width,
-          );
-          const y = Math.round(
-            ((pointer.clientY - canvasBounds.top) / canvasBounds.height) *
-              this._canvas!.height,
-          );
+          const x = Math.round(pointer.clientX - canvasBounds.left);
+          const y = Math.round(pointer.clientY - canvasBounds.top);
           drawPoint(this._context!, x, y);
           activePointers.set(pointer.id, [{ x, y }]);
           return true;
@@ -110,16 +104,8 @@ export default class DrawingRound extends Component<Props, State> {
             this._context!.lineTo(prevX, prevY);
 
             for (const finePointer of pointer.getCoalesced()) {
-              const x = Math.round(
-                ((finePointer.clientX - canvasBounds.left) /
-                  canvasBounds.width) *
-                  this._canvas!.width,
-              );
-              const y = Math.round(
-                ((finePointer.clientY - canvasBounds.top) /
-                  canvasBounds.height) *
-                  this._canvas!.height,
-              );
+              const x = Math.round(finePointer.clientX - canvasBounds.left);
+              const y = Math.round(finePointer.clientY - canvasBounds.top);
               linePoints.push({ x, y });
               this._context!.lineTo(x, y);
             }
@@ -128,11 +114,15 @@ export default class DrawingRound extends Component<Props, State> {
           }
         },
         end: pointer => {
+          const { width, height } = canvas.getBoundingClientRect();
           const linePoints = simplify(activePointers.get(pointer.id)!, 1);
           activePointers.delete(pointer.id);
           this._drawingData!.push(
             penUp,
-            ...linePoints.flatMap(({ x, y }) => [x, y]),
+            ...linePoints.flatMap(({ x, y }) => [
+              Math.round((x / width) * maxDrawingVal),
+              Math.round((y / height) * maxDrawingVal),
+            ]),
           );
         },
       });
@@ -164,25 +154,17 @@ export default class DrawingRound extends Component<Props, State> {
       clearCanvas(this._context!);
     }
 
-    drawPathData(
-      this._canvas!.width,
-      this._canvas!.height,
-      this._drawingData!,
-      this._context!,
-    );
+    const { width, height } = this._canvas!.getBoundingClientRect();
+    drawPathData(width, height, this._drawingData!, this._context!);
   };
 
   private _onSendClick = () => {
-    const dataArray = new Int16Array(this._drawingData!);
+    const { width, height } = this._canvas!.getBoundingClientRect();
+    const dataArray = new Uint16Array(this._drawingData!);
     const uint8 = new Uint8Array(dataArray.buffer);
-    const b64 = bufferToBase64(uint8.buffer);
-    const data = JSON.stringify({
-      width: this._canvas!.width,
-      height: this._canvas!.height,
-      lineWidth: this._context!.lineWidth,
-      data: b64,
-    });
-    this.props.onSubmit(data);
+    const data = bufferToBase64(uint8.buffer);
+    const body = JSON.stringify({ width, height, data });
+    this.props.onSubmit(body);
   };
 
   private _onMqChange = () => {

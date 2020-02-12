@@ -19,11 +19,9 @@ const canvases = document.querySelectorAll(
 
 for (const canvas of canvases) {
   const { width, height } = canvas;
-  const originalLineWidth = Number(canvas.dataset.lineWidth);
   const pathBase64 = canvas.dataset.path!;
-  const points = new Int16Array(base64ToBuffer(pathBase64));
+  const points = new Uint16Array(base64ToBuffer(pathBase64));
   const ctx = canvas.getContext('2d', { alpha: false })!;
-  resetCanvas(ctx);
-  ctx.lineWidth = originalLineWidth * (canvas.width / width);
+  resetCanvas(ctx, width, height);
   drawPathData(width, height, points, ctx);
 }

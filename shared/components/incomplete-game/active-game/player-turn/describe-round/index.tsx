@@ -25,7 +25,6 @@ interface Props {
 interface TurnData {
   width: number;
   height: number;
-  lineWidth: number;
   data: string;
 }
 
@@ -52,7 +51,6 @@ export default class DescribeRound extends Component<Props> {
           <CompleteDrawing
             width={this._parsedTurnData!.width}
             height={this._parsedTurnData!.height}
-            lineWidth={this._parsedTurnData!.lineWidth}
             pathBase64={this._parsedTurnData!.data}
           />
         </div>

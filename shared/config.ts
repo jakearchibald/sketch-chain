@@ -23,12 +23,17 @@ export const maxDescriptionLength = 100;
  * Drawing line width
  */
 export const lineWidth = 3;
+
+const maxUint16Val = 0xffff;
 /**
- * Drawing pen up number
- * This is the lowest int16 number
+ * Drawing pen up number.
  */
-export const penUp = -32768;
+export const penUp = maxUint16Val;
+/**
+ * Max X/Y value.
+ */
+export const maxDrawingVal = maxUint16Val - 10;
 /**
  * Max image dimension
  */
-export const maxImgSize = 6000;
+export const maxImgSize = 3000;

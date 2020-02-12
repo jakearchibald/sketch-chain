@@ -18,7 +18,6 @@ import { base64ToBuffer } from 'shared/base64';
 interface Props {
   width: number;
   height: number;
-  lineWidth: number;
   pathBase64: string;
 }
 
@@ -27,7 +26,7 @@ interface State {}
 export default class CompleteDrawing extends Component<Props, State> {
   private _context?: CanvasRenderingContext2D;
   private _cachedPathBase64?: string;
-  private _cachedPathData?: Int16Array;
+  private _cachedPathData?: Uint16Array;
 
   private _iframeWindowResize = () => {
     this._redrawCanvas();
@@ -44,10 +43,10 @@ export default class CompleteDrawing extends Component<Props, State> {
   };
 
   private _redrawCanvas() {
-    resetCanvas(this._context!);
+    resetCanvas(this._context!, this.props.width, this.props.height);
 
     if (this.props.pathBase64 !== this._cachedPathBase64) {
-      this._cachedPathData = new Int16Array(
+      this._cachedPathData = new Uint16Array(
         base64ToBuffer(this.props.pathBase64),
       );
       this._cachedPathBase64 = this.props.pathBase64;
