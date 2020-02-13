@@ -183,13 +183,19 @@ body {
   opacity: 0;
   pointer-events: none;
   position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 
   &:fullscreen {
     display: block;
     margin: 0;
     border: 0;
+    width: auto;
+    height: auto;
     opacity: 1;
     pointer-events: auto;
+    overflow: visible;
 
     & .allow-canvas-resize {
       height: 100vh;

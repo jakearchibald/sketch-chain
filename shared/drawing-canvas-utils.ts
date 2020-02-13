@@ -28,7 +28,7 @@ export function resetCanvas(
     canvas.width = canvas.height * canvasAspect;
   } else {
     canvas.width = Math.round(canvasBounds.width * devicePixelRatio);
-    canvas.height = canvas.width * canvasAspect;
+    canvas.height = canvas.width / canvasAspect;
   }
 
   ctx.lineWidth = lineWidth;
