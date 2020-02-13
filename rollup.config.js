@@ -56,6 +56,7 @@ export default async function({ watch }) {
     },
     watch: { clearScreen: false },
     preserveModules: true,
+    preserveSymlinks: true,
     plugins: [
       { resolveFileUrl },
       clientBundlePlugin(
