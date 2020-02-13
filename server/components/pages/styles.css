@@ -213,7 +213,7 @@ body {
   bottom: 0;
 
   & .allow-canvas-resize {
-    height: 100vh;
+    height: 100%;
   }
 }
 

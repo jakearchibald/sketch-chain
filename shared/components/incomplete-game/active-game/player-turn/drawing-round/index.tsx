@@ -195,7 +195,8 @@ export default class DrawingRound extends Component<Props, State> {
     const activePointers = new Map<number, { x: number; y: number }[]>();
 
     this._pointerTracker = new PointerTracker(canvas, {
-      start: pointer => {
+      start: (pointer, event) => {
+        event.preventDefault();
         if (!this.state.drawingBegun) {
           this.setState({ drawingBegun: true });
         }
@@ -206,7 +207,8 @@ export default class DrawingRound extends Component<Props, State> {
         activePointers.set(pointer.id, [{ x, y }]);
         return true;
       },
-      move: (_, changedPointers) => {
+      move: (_, changedPointers, event) => {
+        event.preventDefault();
         const canvasBounds = canvas.getBoundingClientRect();
 
         for (const pointer of changedPointers) {
