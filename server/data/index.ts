@@ -133,19 +133,21 @@ export async function leaveGame(game: Game, userId: string): Promise<void> {
     if (game.turn > player.order!) {
       throw Error('Player cannot be removed if already played');
     }
+
     // Remove player, reorder other players
     await Promise.all([
-      // If the current player is changing, handle notifications.
-      // Also, if this is the last player, the game ends.
-      player.order === game.turn
-        ? handleTurnChange(game, game.turn)
-        : undefined,
       // Reorder the remaining players
       setOrderOnPlayers(game.gamePlayers.slice(playerIndex + 1), {
         startAt: player.order!,
       }),
       player.destroy(),
     ]);
+
+    await game.reload();
+
+    // If the current player is changing, handle notifications.
+    // Also, if this is the last player, the game ends.
+    player.order === game.turn ? handleTurnChange(game, game.turn) : undefined;
     gameChanged(game.id);
     return;
   }
