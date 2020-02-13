@@ -44,6 +44,7 @@ export default async function({ watch }) {
     tsPluginInstance,
     resolveDirsPlugin(['client', 'server', 'shared']),
     assetPlugin(),
+    commonjs(),
   ];
 
   return {
@@ -66,7 +67,6 @@ export default async function({ watch }) {
             constsPlugin({ isServer: false }),
             ...commonPlugins(),
             resolve(),
-            commonjs(),
             terser({ module: true }),
           ],
         },
