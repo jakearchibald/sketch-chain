@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 import del from 'del';
-import resolve from 'rollup-plugin-node-resolve';
+import resolve from '@rollup/plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import commonjs from '@rollup/plugin-commonjs';
 
