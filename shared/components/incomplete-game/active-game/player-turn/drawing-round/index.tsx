@@ -228,7 +228,7 @@ export default class DrawingRound extends Component<Props, State> {
       },
       end: pointer => {
         const { width, height } = canvas.getBoundingClientRect();
-        const linePoints = simplify(activePointers.get(pointer.id)!, 1);
+        const linePoints = simplify(activePointers.get(pointer.id)!, 0.8);
         activePointers.delete(pointer.id);
         this._drawingData!.push(
           penUp,
@@ -240,7 +240,7 @@ export default class DrawingRound extends Component<Props, State> {
       },
     });
 
-    this._context = canvas.getContext('2d', { alpha: false })!;
+    this._context = canvas.getContext('2d')!;
     this._resetCanvas();
   }
 

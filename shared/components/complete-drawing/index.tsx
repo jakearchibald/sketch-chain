@@ -14,6 +14,7 @@ import { h, Component } from 'preact';
 import IframeOnResize from '../iframe-on-resize';
 import { resetCanvas, drawPathData } from 'shared/drawing-canvas-utils';
 import { base64ToBuffer } from 'shared/base64';
+import isServer from 'consts:isServer';
 
 interface Props {
   width: number;
@@ -38,7 +39,7 @@ export default class CompleteDrawing extends Component<Props, State> {
   };
 
   componentDidMount() {
-    this._context = this._canvas!.getContext('2d', { alpha: false })!;
+    this._context = this._canvas!.getContext('2d')!;
     this._redrawCanvas();
   }
 
@@ -62,12 +63,18 @@ export default class CompleteDrawing extends Component<Props, State> {
 
   render({ width, height }: Props) {
     return (
-      <div
-        class="canvas-container canvas-aspect-ratio"
-        style={{ 'padding-top': (height / width) * 100 + '%' }}
-      >
-        <IframeOnResize onResize={this._iframeWindowResize} />
-        <canvas class="drawing-canvas" ref={this._canvasMount} />
+      <div class="complete-drawing">
+        {isServer ? (
+          <div />
+        ) : (
+          <IframeOnResize onResize={this._iframeWindowResize} />
+        )}
+        <canvas
+          class="complete-canvas"
+          ref={this._canvasMount}
+          width={width}
+          height={height}
+        />
       </div>
     );
   }

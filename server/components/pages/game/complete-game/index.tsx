@@ -13,6 +13,7 @@
 import { h, FunctionalComponent } from 'preact';
 
 import { Game, GamePlayer } from 'server/data/models';
+import CompleteDrawing from 'shared/components/complete-drawing';
 
 interface Props {
   game: Game;
@@ -40,13 +41,16 @@ const CompleteGame: FunctionalComponent<Props> = ({ game, players }) => (
             {(() => {
               const turnData = JSON.parse(player.turnData!);
               return (
-                <canvas
-                  class="final-drawing-canvas"
-                  width={turnData.width}
-                  height={turnData.height}
+                <div
+                  class="final-drawing-canvas-container"
                   data-path={turnData.data}
-                  style="display: block; width: 100%"
-                />
+                >
+                  <CompleteDrawing
+                    width={turnData.width}
+                    height={turnData.height}
+                    pathBase64={turnData.data}
+                  />
+                </div>
               );
             })()}
           </div>

@@ -19,8 +19,18 @@ export function resetCanvas(
 ) {
   const canvas = ctx.canvas;
   const canvasBounds = canvas.getBoundingClientRect();
-  canvas.width = Math.round(canvasBounds.width * devicePixelRatio);
-  canvas.height = Math.round(canvasBounds.height * devicePixelRatio);
+  const canvasAspect = width / height;
+  const boundsAspect = canvasBounds.width / canvasBounds.height;
+
+  // Maintain the aspect ratio so object-fit works
+  if (boundsAspect > canvasAspect) {
+    canvas.height = Math.round(canvasBounds.height * devicePixelRatio);
+    canvas.width = canvas.height * canvasAspect;
+  } else {
+    canvas.width = Math.round(canvasBounds.width * devicePixelRatio);
+    canvas.height = canvas.width * canvasAspect;
+  }
+
   ctx.lineWidth = lineWidth;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';

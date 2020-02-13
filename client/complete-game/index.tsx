@@ -13,15 +13,16 @@
 import { base64ToBuffer } from 'shared/base64';
 import { resetCanvas, drawPathData } from 'shared/drawing-canvas-utils';
 
-const canvases = document.querySelectorAll(
-  '.final-drawing-canvas',
+const containers = document.querySelectorAll(
+  '.final-drawing-canvas-container',
 ) as NodeListOf<HTMLCanvasElement>;
 
-for (const canvas of canvases) {
+for (const container of containers) {
+  const canvas = container.querySelector('canvas') as HTMLCanvasElement;
   const { width, height } = canvas;
-  const pathBase64 = canvas.dataset.path!;
+  const pathBase64 = container.dataset.path!;
   const points = new Uint16Array(base64ToBuffer(pathBase64));
-  const ctx = canvas.getContext('2d', { alpha: false })!;
+  const ctx = canvas.getContext('2d')!;
   resetCanvas(ctx, width, height);
   drawPathData(width, height, points, ctx);
 }

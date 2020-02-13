@@ -238,10 +238,7 @@ body {
 
 .allow-canvas-resize {
   height: 80vh;
-}
 
-.allow-canvas-resize,
-.canvas-aspect-ratio {
   & .drawing-canvas {
     position: absolute;
     top: 0;
@@ -263,6 +260,7 @@ body {
 }
 
 .drawing-controls {
+  background: #f7f7f7;
   grid-row: buttons;
   padding: 1rem;
   display: grid;
@@ -270,4 +268,17 @@ body {
   grid-auto-flow: column;
   grid-gap: 0.5rem;
   justify-content: end;
+}
+
+.complete-drawing {
+  position: relative;
+  max-height: 80vh;
+  display: flex;
+}
+
+.complete-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
