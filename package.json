@@ -39,6 +39,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "express-async-handler": "^1.1.4",
+    "express-http-to-https": "^1.1.4",
     "express-session": "^1.17.0",
     "express-static-gzip": "^2.0.6",
     "friendly-words": "^1.1.10",

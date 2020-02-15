@@ -18,6 +18,7 @@ import express, { Request, Response } from 'express';
 import session from 'express-session';
 import fileStoreFactory from 'session-file-store';
 import compressedStatic from 'express-static-gzip';
+import { redirectToHTTPS } from 'express-http-to-https';
 
 import {
   cookieSecret,
@@ -42,6 +43,8 @@ app.use((_, res, next) => {
   res.set('X-Frame-Options', 'deny');
   next();
 });
+
+app.use(redirectToHTTPS([/localhost:8081/]));
 
 app.use(
   '/assets/',
