@@ -19,6 +19,7 @@ import {
   oauthClientSecret,
   origin,
   devMode,
+  admins,
 } from 'server/config';
 import { createProbablyUniqueName, requireSameOrigin } from 'server/utils';
 
@@ -37,6 +38,20 @@ export function requireLogin(): RequestHandler {
     }
 
     const error = 'Login required';
+    res.status(403).send(error);
+  };
+}
+
+export function requireAdmin(): RequestHandler {
+  return (req, res, next) => {
+    const user = req.session!.user;
+
+    if (user && user.emailVerified && admins.includes(user.email)) {
+      next();
+      return;
+    }
+
+    const error = 'Admin required';
     res.status(403).send(error);
   };
 }

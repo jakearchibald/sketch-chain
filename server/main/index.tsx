@@ -10,6 +10,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { join as joinPath } from 'path';
+
 import { Router, Request, Response } from 'express';
 import { h } from 'preact';
 import expressAsyncHandler from 'express-async-handler';
@@ -18,7 +20,7 @@ import { renderPage } from 'server/render';
 import { requireSameOrigin } from 'server/utils';
 import HomePage from 'server/components/pages/home';
 import { createGame, getUsersGames } from 'server/data';
-import { getLoginRedirectURL } from 'server/auth';
+import { getLoginRedirectURL, requireAdmin } from 'server/auth';
 
 export const router: Router = Router({
   strict: true,
@@ -65,3 +67,10 @@ router.post(
   requireSameOrigin(),
   expressAsyncHandler(createGameRoute),
 );
+
+router.get('/dl-db', requireAdmin(), (req, res) => {
+  res
+    .status(200)
+    .attachment('db.db')
+    .sendFile(joinPath(process.cwd(), '.data', 'storage', 'db.db'));
+});
