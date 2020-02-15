@@ -1,44 +1,21 @@
-/ Home page:
-  Create room
-    On click it creates a room and redirects there
+Game
+  -Remove turn
+  has n GameThreads where n is num players
 
-/game/[random chars]
-  if game doesn't exist 404
-  if not gameStarted
-    List players
-    if not in this game:
-      Form to join game
-    else:
-      if < 4 players
-        waiting for n more players
-      else if admin
-        Start game button
-      else
-        waiting for <admin name> to start game
-      List of connected players
-  if game in progress
-    If current player's turn
-      if first round:
-        Describe something to draw
-        Text field
-        Best: not to easy, not too hard
-        Sometimes combinations work well: eg "A lamp on top of a horse"
-      else if odd round
-        Canvas
-        Clear
-        Done
-      else
-        Image
-        What do you think this is?
-        Text field
-        Submit
-    else
-      Waiting on <player name>
-      if admin:
-        Button to remove player from game (because taking too long)
-  else (game complete)
-    Show progression of game
-    Download button
+GamePlayer
+  -Remove turnData
+  +removed - boolean (player's turns will be skipped)
+
+GameThread
+  gameId
+  turn - number (player index is = (turn + threadOffset) % playersLength)
+  threadOffset - 0-(num players-1) - offset from player order
+
+GameThreadTurn
+  threadId
+  userId
+  turnType - 'draw' or 'describe'
+  turnData
 
 UserPush
   userId
@@ -76,7 +53,7 @@ Reset scroll on dynamic page change.
 Trim image on submission? Add a padding.
 
 Next step:
-  On the "draw it" screen:
-    It appears too long on desktop. Its size should be limited.
-      Maybe redo the CSS here. It's really hacky.
-
+  Look into iOS/ipad issue.
+  Make starting games friendly.
+  Make big actions cancellable.
+  Push notifications

@@ -53,13 +53,13 @@ export const router: Router = Router({
   strict: true,
 });
 
-router.post('/test-login', requireSameOrigin(), (req, res) => {
+router.all('/test-login', (req, res) => {
   if (!devMode) {
     res.status(403).send('Only allowed during dev');
     return;
   }
 
-  const id = createProbablyUniqueName();
+  const id = req.query.id || createProbablyUniqueName();
 
   req.session!.user = {
     email: 'foo@bar.com',

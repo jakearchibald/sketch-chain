@@ -52,6 +52,22 @@ body {
   font: inherit;
   padding: 0.4em 0.7em;
   background: #e2e2e2;
+
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* Prevent double-tap zoom */
+  touch-action: manipulation;
+}
+
+.button:disabled {
+  /*
+    This fixes a weird case where particular mouse/touch events just
+    vanish on disabled buttons. Without this, double-tap to zoom
+    still happens on Safari.
+  */
+  pointer-events: none;
 }
 
 .content-box {
@@ -233,6 +249,7 @@ body {
   overflow: hidden;
   position: relative;
   grid-row: canvas;
+  touch-action: pan-x pan-y;
 }
 
 .drawing-canvas {
