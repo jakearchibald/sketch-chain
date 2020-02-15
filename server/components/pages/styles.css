@@ -104,6 +104,10 @@ body {
   }
 }
 
+.content-hr {
+  border-top: 5px solid #eaeaea;
+}
+
 .site-title {
   margin: 0;
   text-align: center;
@@ -304,4 +308,21 @@ body {
   width: 100%;
   height: auto;
   object-fit: contain;
+}
+
+.avatar-description {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  grid-gap: 0.7rem;
+  align-items: center;
+}
+
+.avatar-description-description {
+  & > :first-child {
+    margin-top: 0;
+  }
+
+  & > :last-child {
+    margin-bottom: 0;
+  }
 }

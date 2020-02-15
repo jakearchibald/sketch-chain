@@ -63,7 +63,6 @@ export default class ActiveGame extends Component<Props, State> {
                         alt=""
                         src={`${player.avatar}=s${40}-c`}
                         srcset={`${player.avatar}=s${80}-c 2x`}
-                        class="player-avatar"
                       />
                     ) : (
                       <div />

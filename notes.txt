@@ -72,7 +72,7 @@ Reset scroll on dynamic page change.
 Trim image on submission? Add a padding.
 
 Next step:
-  Final page should have avatars.
+  Fix issue with trailing slashes in URLs.
   Make big actions cancellable.
   Make starting games friendly - move start buttons
   Change it so n number of games happen at once
