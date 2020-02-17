@@ -114,8 +114,14 @@ body {
 }
 
 .hero-button-container {
-  margin: 3.2rem auto;
-  width: max-content;
+  margin: 2.55rem auto;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+
+  & > * {
+    margin: 0.65rem;
+  }
 }
 
 .hero-button {

@@ -74,36 +74,34 @@ export default class ChangeParticipation extends Component<Props, State> {
   };
 
   render({ game, userPlayer }: Props, { joining, leaving }: State) {
-    return (
-      <div class="hero-button-container">
-        {!userPlayer ? (
-          game.state === GameState.Open && (
-            <form
-              action="join"
-              method="POST"
-              onSubmit={this._onJoinSubmit}
-              disabled={joining}
-            >
-              <button class="button hero-button">Join</button>
-            </form>
-          )
-        ) : userPlayer.isAdmin ? (
-          <form action="cancel" method="POST" onSubmit={this._onCancelSubmit}>
-            <button class="button hero-button button-bad">Cancel game</button>
-          </form>
-        ) : game.state === GameState.Open || game.turn <= userPlayer.order! ? (
+    return [
+      !userPlayer ? (
+        game.state === GameState.Open && (
           <form
-            action="leave"
+            action="join"
             method="POST"
-            onSubmit={this._onLeaveSubmit}
-            disabled={leaving}
+            onSubmit={this._onJoinSubmit}
+            disabled={joining}
           >
-            <button class="button hero-button button-bad">Leave</button>
+            <button class="button hero-button">Join</button>
           </form>
-        ) : (
-          false
-        )}
-      </div>
-    );
+        )
+      ) : userPlayer.isAdmin ? (
+        <form action="cancel" method="POST" onSubmit={this._onCancelSubmit}>
+          <button class="button hero-button button-bad">Cancel game</button>
+        </form>
+      ) : game.state === GameState.Open || game.turn <= userPlayer.order! ? (
+        <form
+          action="leave"
+          method="POST"
+          onSubmit={this._onLeaveSubmit}
+          disabled={leaving}
+        >
+          <button class="button hero-button button-bad">Leave</button>
+        </form>
+      ) : (
+        false
+      ),
+    ];
   }
 }

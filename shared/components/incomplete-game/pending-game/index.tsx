@@ -45,7 +45,6 @@ export default class PendingGame extends Component<Props, State> {
   render({ players, game, userPlayer }: Props, { starting }: State) {
     return (
       <div>
-        <ChangeParticipation game={game} userPlayer={userPlayer} />
         {userPlayer?.isAdmin ? (
           <div class="content-box">
             <h2 class="content-box-title">Waiting for players</h2>
@@ -60,6 +59,19 @@ export default class PendingGame extends Component<Props, State> {
         ) : (
           <WhatIsThis />
         )}
+        <div class="hero-button-container">
+          <ChangeParticipation game={game} userPlayer={userPlayer} />
+          {userPlayer?.isAdmin && players.length >= minPlayers && (
+            <form
+              action="start"
+              method="POST"
+              onSubmit={this._onStartSubmit}
+              disabled={starting}
+            >
+              <button class="button hero-button">Start game</button>
+            </form>
+          )}
+        </div>
         <div class="content-box">
           <h2 class="content-box-title">Players</h2>
           <div class="content-padding">
@@ -83,18 +95,6 @@ export default class PendingGame extends Component<Props, State> {
             </ul>
           </div>
         </div>
-
-        {userPlayer?.isAdmin && players.length >= minPlayers && (
-          <form
-            action="start"
-            method="POST"
-            onSubmit={this._onStartSubmit}
-            disabled={starting}
-            class="hero-button-container"
-          >
-            <button class="button hero-button">Start</button>
-          </form>
-        )}
       </div>
     );
   }

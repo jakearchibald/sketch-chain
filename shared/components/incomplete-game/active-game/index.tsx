@@ -99,7 +99,13 @@ export default class ActiveGame extends Component<Props, State> {
           </div>
         )}
 
-        <ChangeParticipation userPlayer={userPlayer} game={game} warnOnLeave />
+        <div class="hero-button-container">
+          <ChangeParticipation
+            userPlayer={userPlayer}
+            game={game}
+            warnOnLeave
+          />
+        </div>
       </div>
     );
   }
