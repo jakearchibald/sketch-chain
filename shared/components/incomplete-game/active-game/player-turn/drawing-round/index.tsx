@@ -130,6 +130,7 @@ export default class DrawingRound extends Component<Props, State> {
   };
 
   private _onClearClick = () => {
+    if (!confirm('Clear canvas?')) return;
     this._resetCanvas();
     this.setState({ drawingBegun: false });
   };
@@ -150,6 +151,7 @@ export default class DrawingRound extends Component<Props, State> {
   };
 
   private _onSendClick = () => {
+    if (!confirm('Send sketch?')) return;
     const { width, height } = this._canvas!.getBoundingClientRect();
     const dataArray = new Uint16Array(this._drawingData!);
     // This mutates dataArray:

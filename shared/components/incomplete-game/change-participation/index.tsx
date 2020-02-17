@@ -16,6 +16,7 @@ import { Game, Player, GameState } from 'shared/types';
 interface Props {
   game: Game;
   userPlayer?: Player;
+  warnOnLeave?: boolean;
 }
 
 interface State {
@@ -51,6 +52,11 @@ export default class ChangeParticipation extends Component<Props, State> {
 
   private _onLeaveSubmit = async (event: Event) => {
     event.preventDefault();
+
+    if (this.props.warnOnLeave && !confirm('Leave game?')) {
+      return;
+    }
+
     this.setState({ leaving: true });
     const response = await fetch('leave?json=1', { method: 'POST' });
     const data = await response.json();
@@ -58,6 +64,13 @@ export default class ChangeParticipation extends Component<Props, State> {
       console.error(data.error);
     }
     this.setState({ leaving: false });
+  };
+
+  private _onCancelSubmit = (event: Event) => {
+    if (!confirm('Cancel game?')) {
+      event.preventDefault();
+      return;
+    }
   };
 
   render({ game, userPlayer }: Props, { joining, leaving }: State) {
@@ -75,7 +88,7 @@ export default class ChangeParticipation extends Component<Props, State> {
             </form>
           )
         ) : userPlayer.isAdmin ? (
-          <form action="cancel" method="POST">
+          <form action="cancel" method="POST" onSubmit={this._onCancelSubmit}>
             <button class="button hero-button button-bad">Cancel game</button>
           </form>
         ) : game.state === GameState.Open || game.turn <= userPlayer.order! ? (

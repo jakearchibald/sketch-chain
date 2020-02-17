@@ -32,6 +32,9 @@ export default class ActiveGame extends Component<Props, State> {
 
   private _onRemoveSubmit = async (event: Event) => {
     event.preventDefault();
+
+    if (!confirm('Remove player from game?')) return;
+
     this.setState({ removing: true });
     const form = event.target as HTMLFormElement;
     const formDataEntries = [...new FormData(form)] as Array<[string, string]>;
@@ -96,7 +99,7 @@ export default class ActiveGame extends Component<Props, State> {
           </div>
         )}
 
-        <ChangeParticipation userPlayer={userPlayer} game={game} />
+        <ChangeParticipation userPlayer={userPlayer} game={game} warnOnLeave />
       </div>
     );
   }
