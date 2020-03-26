@@ -15,12 +15,12 @@ import cssURL from 'css:../styles.css';
 import LoginState from 'server/components/login-state';
 import GameList from 'server/components/game-list';
 import WhatIsThis from 'shared/components/what-is-this';
-import { UserGames } from 'server/data';
 import { siteTitle } from 'shared/config';
+import { Game } from 'shared/types';
 
 interface Props {
   user?: UserSession;
-  userGames?: UserGames[];
+  userGames?: Game[];
 }
 
 const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
@@ -42,15 +42,13 @@ const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
         <form method="POST" action="/create-game" class="hero-button-container">
           <button class="button hero-button">Create game</button>
         </form>
-        {user && userGames && userGames.length ? (
+        {user && userGames && userGames.length && (
           <div class="content-box">
             <h2 class="content-box-title">Your games</h2>
             <div class="content-padding">
               <GameList userGames={userGames} />
             </div>
           </div>
-        ) : (
-          undefined
         )}
         <WhatIsThis />
       </body>

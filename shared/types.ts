@@ -19,22 +19,39 @@ export const enum GameState {
   Complete,
 }
 
+export const enum TurnType {
+  Draw,
+  Describe,
+  Skip,
+}
+
 export interface Game {
   id: string;
   state: GameState;
-  turn: number;
+  players?: Player[];
+  threads?: Thread[];
 }
 
 export interface Player {
+  id: number;
   userId: string;
   name: string;
   avatar: string | null;
   isAdmin: boolean;
   order: number | null;
-  turnData?: string | null;
 }
 
-export interface GameClientState {
-  game: Game;
-  players: Player[];
+export interface Thread {
+  id: number;
+  turn: number;
+  turnOffset: number;
+  complete: boolean;
+  turnUpdatedAt: Date | null;
+  turns?: Turn[];
+}
+
+export interface Turn {
+  id: number;
+  type: TurnType;
+  data: string | null;
 }

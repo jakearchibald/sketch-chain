@@ -12,97 +12,132 @@
  */
 import { h, FunctionalComponent } from 'preact';
 
-import { Game, GamePlayer } from 'server/data/models';
 import CompleteDrawing from 'shared/components/complete-drawing';
+import { Game, TurnType } from 'shared/types';
 
 interface Props {
   game: Game;
-  players: GamePlayer[];
 }
 
-const CompleteGame: FunctionalComponent<Props> = ({ game, players }) => (
+const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
   <div>
     <div>
-      <div class="content-box">
-        {players.map((player, i) =>
-          i === 0 ? (
-            <div>
-              <h2 class="content-box-title">{player.turnData}</h2>
-              <div class="content-padding">
-                <div class="avatar-description">
-                  {player.avatar && (
-                    <img
-                      width="40"
-                      height="40"
-                      alt=""
-                      src={`${player.avatar}=s${40}-c`}
-                      srcset={`${player.avatar}=s${80}-c 2x`}
-                    />
-                  )}
-                  <div class="avatar-description-description">
-                    <p>{player.name} picked the topic.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : i % 2 ? (
-            <div>
-              <div class="content-padding content-hr">
-                <div class="avatar-description">
-                  {player.avatar && (
-                    <img
-                      width="40"
-                      height="40"
-                      alt=""
-                      src={`${player.avatar}=s${40}-c`}
-                      srcset={`${player.avatar}=s${80}-c 2x`}
-                    />
-                  )}
-                  <div class="avatar-description-description">
-                    <p>{player.name} tried to draw that:</p>
-                  </div>
-                </div>
-              </div>
-              {(() => {
-                const turnData = JSON.parse(player.turnData!);
+      {game.threads!.map(thread => {
+        const firstTurn = thread.turns!.find(
+          turn => turn.type === TurnType.Describe,
+        );
+
+        return (
+          <div class="content-box">
+            {firstTurn && <h2 class="content-box-title">{firstTurn.data}</h2>}
+            {thread.turns!.map(turn => {
+              const player = game.players![
+                (thread.turnOffset + thread.turn) % game.players!.length
+              ];
+
+              if (turn.type === TurnType.Skip) {
                 return (
-                  <div
-                    class="final-drawing-canvas-container"
-                    data-path={turnData.data}
-                  >
-                    <CompleteDrawing
-                      width={turnData.width}
-                      height={turnData.height}
-                      pathBase64={turnData.data}
-                    />
+                  <div class="content-padding">
+                    <div class="avatar-description">
+                      {player.avatar && (
+                        <img
+                          width="40"
+                          height="40"
+                          alt=""
+                          src={`${player.avatar}=s${40}-c`}
+                          srcset={`${player.avatar}=s${80}-c 2x`}
+                        />
+                      )}
+                      <div class="avatar-description-description">
+                        <p>{player.name} skipped their turn.</p>
+                      </div>
+                    </div>
                   </div>
                 );
-              })()}
-            </div>
-          ) : (
-            <div>
-              <div class="content-padding content-hr">
-                <div class="avatar-description">
-                  {player.avatar && (
-                    <img
-                      width="40"
-                      height="40"
-                      alt=""
-                      src={`${player.avatar}=s${40}-c`}
-                      srcset={`${player.avatar}=s${80}-c 2x`}
-                    />
-                  )}
-                  <div class="avatar-description-description">
-                    <p>
-                      {player.name} thought that was "{player.turnData}"
-                    </p>
+              }
+
+              if (turn === firstTurn) {
+                return (
+                  <div class="content-padding">
+                    <div class="avatar-description">
+                      {player.avatar && (
+                        <img
+                          width="40"
+                          height="40"
+                          alt=""
+                          src={`${player.avatar}=s${40}-c`}
+                          srcset={`${player.avatar}=s${80}-c 2x`}
+                        />
+                      )}
+                      <div class="avatar-description-description">
+                        <p>{player.name} picked the topic.</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              if (turn.type === TurnType.Draw) {
+                <div>
+                  <div class="content-padding content-hr">
+                    <div class="avatar-description">
+                      {player.avatar && (
+                        <img
+                          width="40"
+                          height="40"
+                          alt=""
+                          src={`${player.avatar}=s${40}-c`}
+                          srcset={`${player.avatar}=s${80}-c 2x`}
+                        />
+                      )}
+                      <div class="avatar-description-description">
+                        <p>{player.name} tried to draw that:</p>
+                      </div>
+                    </div>
+                  </div>
+                  {(() => {
+                    const turnData = JSON.parse(turn.data!);
+                    return (
+                      <div
+                        class="final-drawing-canvas-container"
+                        data-path={turnData.data}
+                      >
+                        <CompleteDrawing
+                          width={turnData.width}
+                          height={turnData.height}
+                          pathBase64={turnData.data}
+                        />
+                      </div>
+                    );
+                  })()}
+                </div>;
+              }
+
+              // Else describe:
+              return (
+                <div class="content-padding content-hr">
+                  <div class="avatar-description">
+                    {player.avatar && (
+                      <img
+                        width="40"
+                        height="40"
+                        alt=""
+                        src={`${player.avatar}=s${40}-c`}
+                        srcset={`${player.avatar}=s${80}-c 2x`}
+                      />
+                    )}
+                    <div class="avatar-description-description">
+                      <p>
+                        {player.name} thought that was "{turn.data}"
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          ),
-        )}
-      </div>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   </div>
 );

@@ -25,11 +25,10 @@ import {
   joinGame,
   leaveGame,
   cancelGame,
-  getGameClientState,
-  removeTurnDataFromState,
   emitter as dataEmitter,
   startGame,
   playTurn,
+  getGamePageData,
 } from 'server/data';
 import GamePage from 'server/components/pages/game';
 import { getLoginRedirectURL } from 'server/auth';
@@ -43,19 +42,16 @@ export const router: Router = Router({
 router.get(
   '/:gameId/',
   expressAsyncHandler(async (req, res) => {
-    const game = await getGame(req.params.gameId);
-    if (!game) {
+    const gameData = await getGamePageData(req.params.gameId);
+
+    if (!gameData) {
       res.status(404).send('Game not found');
       return;
     }
 
-    const players = game.gamePlayers!;
+    // TODO: If the game is complete, add in the turn data.
 
-    res.send(
-      renderPage(
-        <GamePage game={game} players={players} user={req.session!.user} />,
-      ),
-    );
+    res.send(renderPage(<GamePage {...gameData} user={req.session!.user} />));
   }),
 );
 
@@ -79,6 +75,7 @@ async function joinGameRoute(req: Request, res: Response): Promise<void> {
   const user = req.session!.user;
   const json = !!req.query.json;
 
+  // Redirect to login if user isn't logged in
   if (!user) {
     req.session!.allowGetJoinGame = true;
 
