@@ -114,9 +114,8 @@ export async function getGamePageData(
   const game = gameToSharedGame(gameDB);
   const toReturn: GamePageData = {
     game,
-    // It's important that these are explicitly set to undefined, for setState()
-    inPlayThread: undefined,
-    lastTurnInThread: undefined,
+    // It's important that these are explicitly set to null, for setState()
+    ...emptyActiveTurnData,
   };
 
   if (game.state === GameState.Complete) {
@@ -154,27 +153,31 @@ export async function getGamePageData(
   return toReturn;
 }
 
+const emptyActiveTurnData: ActiveTurnData = {
+  inPlayThread: null,
+  lastTurnInThread: null,
+};
+
 export async function getActiveTurnDataForPlayer(
   game: SharedGame,
   userId: string,
 ): Promise<ActiveTurnData> {
-  if (game.state !== GameState.Playing) return {};
+  if (game.state !== GameState.Playing) return emptyActiveTurnData;
 
   const player =
     userId && game.players!.find((player) => player.userId === userId);
 
-  if (!player) return {};
+  if (!player) return emptyActiveTurnData;
 
   const activeThread = game
     .threads!.filter(pendingThreadsFilter(player))
     .sort((a, b) => Number(a.turnUpdatedAt) - Number(b.turnUpdatedAt))[0];
 
-  if (!activeThread) return {};
+  if (!activeThread) return emptyActiveTurnData;
 
   return {
     inPlayThread: activeThread,
-    lastTurnInThread:
-      (await getLastPlayedTurnForThread(activeThread)) || undefined,
+    lastTurnInThread: await getLastPlayedTurnForThread(activeThread),
   };
 }
 

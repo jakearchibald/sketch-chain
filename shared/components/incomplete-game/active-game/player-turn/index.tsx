@@ -19,7 +19,7 @@ import DescribeRound from './describe-round';
 interface Props {
   players: Player[];
   thread: Thread;
-  previousTurn?: Turn;
+  previousTurn: Turn | null;
 }
 
 interface State {

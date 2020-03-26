@@ -18,8 +18,8 @@ import PlayerTurn from './player-turn';
 interface Props {
   userPlayer?: Player;
   game: Game;
-  inPlayThread?: Thread;
-  lastTurnInThread?: Turn;
+  inPlayThread: Thread | null;
+  lastTurnInThread: Turn | null;
 }
 
 interface State {

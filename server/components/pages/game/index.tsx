@@ -28,8 +28,8 @@ import { siteTitle } from 'shared/config';
 interface Props {
   user?: UserSession;
   game: Game;
-  inPlayThread?: Thread;
-  lastTurnInThread?: Turn;
+  inPlayThread: Thread | null;
+  lastTurnInThread: Turn | null;
 }
 
 const GamePage: FunctionalComponent<Props> = ({

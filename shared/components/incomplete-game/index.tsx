@@ -18,8 +18,8 @@ import ActiveGame from './active-game';
 interface Props {
   userId?: string;
   game: GameType;
-  inPlayThread?: Thread;
-  lastTurnInThread?: Turn;
+  inPlayThread: Thread | null;
+  lastTurnInThread: Turn | null;
 }
 
 const IncompleteGame: FunctionalComponent<Props> = ({

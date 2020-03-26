@@ -63,6 +63,6 @@ export interface GamePageData extends ActiveTurnData {
 }
 
 export interface ActiveTurnData {
-  inPlayThread?: Thread;
-  lastTurnInThread?: Turn;
+  inPlayThread: Thread | null;
+  lastTurnInThread: Turn | null;
 }

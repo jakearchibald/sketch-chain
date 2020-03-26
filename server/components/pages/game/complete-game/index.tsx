@@ -22,17 +22,17 @@ interface Props {
 const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
   <div>
     <div>
-      {game.threads!.map(thread => {
+      {game.threads!.map((thread) => {
         const firstTurn = thread.turns!.find(
-          turn => turn.type === TurnType.Describe,
+          (turn) => turn.type === TurnType.Describe,
         );
 
         return (
           <div class="content-box">
             {firstTurn && <h2 class="content-box-title">{firstTurn.data}</h2>}
-            {thread.turns!.map(turn => {
+            {thread.turns!.map((turn, i) => {
               const player = game.players![
-                (thread.turnOffset + thread.turn) % game.players!.length
+                (thread.turnOffset + i) % game.players!.length
               ];
 
               if (turn.type === TurnType.Skip) {
@@ -78,39 +78,41 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
               }
 
               if (turn.type === TurnType.Draw) {
-                <div>
-                  <div class="content-padding content-hr">
-                    <div class="avatar-description">
-                      {player.avatar && (
-                        <img
-                          width="40"
-                          height="40"
-                          alt=""
-                          src={`${player.avatar}=s${40}-c`}
-                          srcset={`${player.avatar}=s${80}-c 2x`}
-                        />
-                      )}
-                      <div class="avatar-description-description">
-                        <p>{player.name} tried to draw that:</p>
+                return (
+                  <div>
+                    <div class="content-padding content-hr">
+                      <div class="avatar-description">
+                        {player.avatar && (
+                          <img
+                            width="40"
+                            height="40"
+                            alt=""
+                            src={`${player.avatar}=s${40}-c`}
+                            srcset={`${player.avatar}=s${80}-c 2x`}
+                          />
+                        )}
+                        <div class="avatar-description-description">
+                          <p>{player.name} tried to draw that:</p>
+                        </div>
                       </div>
                     </div>
+                    {(() => {
+                      const turnData = JSON.parse(turn.data!);
+                      return (
+                        <div
+                          class="final-drawing-canvas-container"
+                          data-path={turnData.data}
+                        >
+                          <CompleteDrawing
+                            width={turnData.width}
+                            height={turnData.height}
+                            pathBase64={turnData.data}
+                          />
+                        </div>
+                      );
+                    })()}
                   </div>
-                  {(() => {
-                    const turnData = JSON.parse(turn.data!);
-                    return (
-                      <div
-                        class="final-drawing-canvas-container"
-                        data-path={turnData.data}
-                      >
-                        <CompleteDrawing
-                          width={turnData.width}
-                          height={turnData.height}
-                          pathBase64={turnData.data}
-                        />
-                      </div>
-                    );
-                  })()}
-                </div>;
+                );
               }
 
               // Else describe:
