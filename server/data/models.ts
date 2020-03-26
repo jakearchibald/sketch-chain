@@ -160,6 +160,6 @@ Thread.belongsTo(Game);
 
 Thread.hasMany(Turn, { foreignKey: { allowNull: false } });
 Turn.belongsTo(Thread);
-Turn.hasOne(Player, { foreignKey: { allowNull: false } });
+Turn.belongsTo(Player);
 
 sequelize.sync();

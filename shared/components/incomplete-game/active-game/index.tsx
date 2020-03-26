@@ -54,75 +54,73 @@ export default class ActiveGame extends Component<Props, State> {
   ) {
     return (
       <div>
-        {inPlayThread ? (
+        {inPlayThread && (
           <PlayerTurn
             players={game.players!}
             thread={inPlayThread}
             previousTurn={lastTurnInThread}
           />
-        ) : (
-          <div class="content-box">
-            <h2 class="content-box-title">Game state</h2>
-            <div class="content-padding">
-              <ol class="player-list">
-                {game.players!.map((player) => (
-                  <li key={player.userId}>
-                    {player.avatar ? (
-                      <img
-                        width="40"
-                        height="40"
-                        alt=""
-                        src={`${player.avatar}=s${40}-c`}
-                        srcset={`${player.avatar}=s${80}-c 2x`}
-                      />
-                    ) : (
-                      <div />
-                    )}
-                    <div>
-                      {player.name}
-                      <div class="player-round-status">
-                        {game.threads!.map((thread) => {
-                          const actualTurn =
-                            (thread.turn + thread.turnOffset) %
-                            game.players!.length;
-                          return (
-                            <div
-                              class={`player-round-status-item ${
-                                thread.complete || actualTurn > player.order!
-                                  ? 'status-complete'
-                                  : actualTurn === player.order!
-                                  ? 'status-active'
-                                  : 'status-pending'
-                              }`}
-                            ></div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div>
-                      {userPlayer?.isAdmin && !player.isAdmin && (
-                        <form
-                          action="leave"
-                          method="POST"
-                          onSubmit={this._onRemoveSubmit}
-                          disabled={removing}
-                        >
-                          <input
-                            type="hidden"
-                            name="player"
-                            value={player.userId}
-                          />
-                          <button class="button button-bad">Remove</button>
-                        </form>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
         )}
-
+        <div class="content-box">
+          <h2 class="content-box-title">Game state</h2>
+          <div class="content-padding">
+            <ol class="player-list">
+              {game.players!.map((player) => (
+                <li key={player.userId}>
+                  {player.avatar ? (
+                    <img
+                      width="40"
+                      height="40"
+                      alt=""
+                      src={`${player.avatar}=s${40}-c`}
+                      srcset={`${player.avatar}=s${80}-c 2x`}
+                    />
+                  ) : (
+                    <div />
+                  )}
+                  <div>
+                    {player.name}
+                    <div class="player-round-status">
+                      {game.threads!.map((thread) => {
+                        const actualTurn =
+                          (thread.turn + thread.turnOffset) %
+                          game.players!.length;
+                        return (
+                          <div
+                            class={`player-round-status-item ${
+                              thread.complete || actualTurn > player.order!
+                                ? 'status-complete'
+                                : actualTurn === player.order!
+                                ? 'status-active'
+                                : 'status-pending'
+                            }`}
+                          ></div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div>
+                    {userPlayer?.isAdmin && !player.isAdmin && (
+                      <form
+                        action="leave"
+                        method="POST"
+                        onSubmit={this._onRemoveSubmit}
+                        disabled={removing}
+                      >
+                        <input
+                          type="hidden"
+                          name="player"
+                          value={player.userId}
+                        />
+                        <button class="button button-bad">Remove</button>
+                      </form>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
         <div class="hero-button-container">
           <ChangeParticipation
             userPlayer={userPlayer}

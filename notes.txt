@@ -52,11 +52,13 @@ Compress image turn upload data?
 Reset scroll on dynamic page change.
 Switch to transactions.
 Check for unused exports.
+When dealing with thread.turn + thread.turnOffset, it needs to mod on players length, not thread length.
 
 Next step:
-  Change it so n number of games happen at once
-    Fix up create and join game
-    REMEMBER: Set indexes on models. Look at all queries.
-  Push notifications
-  Error messages for failed actions
-  Stop using `disabled` on form elements
+  Make sure web socket does the right thing.
+  Remove redundant things from model/index
+  Set indexes on models. Look at all queries.
+  Check client side code
+  Error messages for failed actions.
+  Stop using `disabled` on form elements.
+  Push notifications.

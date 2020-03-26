@@ -44,7 +44,8 @@ export const router: Router = Router({
 router.get(
   '/:gameId/',
   expressAsyncHandler(async (req, res) => {
-    const gameData = await getGamePageData(req.params.gameId);
+    const user = req.session!.user;
+    const gameData = await getGamePageData(req.params.gameId, user?.id);
 
     if (!gameData) {
       res.status(404).send('Game not found');

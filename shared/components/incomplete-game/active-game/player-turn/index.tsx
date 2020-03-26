@@ -54,7 +54,7 @@ export default class PlayerTurn extends Component<Props, State> {
     ];
 
     const nextPlayer = threadPlayers
-      .slice(thread.turn)
+      .slice(thread.turn + 1)
       .find((player) => !player.leftGame);
 
     return (

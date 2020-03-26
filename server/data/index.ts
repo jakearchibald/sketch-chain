@@ -27,7 +27,7 @@ import {
 } from 'shared/types';
 import { minPlayers, maxDescriptionLength, maxImgSize } from 'shared/config';
 import { randomInt } from '../utils';
-import { Op } from 'sequelize/types';
+import { Op } from 'sequelize';
 
 type GameChangeCallback = (gameId: string) => void;
 
@@ -292,21 +292,27 @@ export async function leaveGame(
     }
   }
 
-  const pendingThreads = game.threads!.filter(pendingThreadsFilter(player));
+  if (game.state === GameState.Open) {
+    await player.destroy();
+    gameChanged(game.id);
+  } else {
+    const pendingThreads = game.threads!.filter(pendingThreadsFilter(player));
 
-  await Promise.all<unknown>([
-    player.update({
-      leftGame: true,
-    }),
-    // Create skip turns for any waiting threads
-    ...pendingThreads.map((thread) =>
-      createTurn(thread, game.players!, {
-        type: TurnType.Skip,
+    await Promise.all<unknown>([
+      player.update({
+        leftGame: true,
       }),
-    ),
-  ]);
+      // Create skip turns for any waiting threads
+      ...pendingThreads.map((thread) =>
+        createTurn(thread, game.players!, {
+          type: TurnType.Skip,
+        }),
+      ),
+    ]);
 
-  await handleTurnChanges(game);
+    await handleTurnChanges(game);
+  }
+
   gameChanged(game.id);
 }
 
@@ -413,7 +419,7 @@ export async function playTurn(
   if (!game) throw new NotFoundError('Cannot find game');
   const player = game.players!.find((player) => player.userId === userId);
   if (!player) throw new NotFoundError('Cannot find player in this game');
-  const thread = game.threads!.find((thread) => (thread.id = threadId));
+  const thread = game.threads!.find((thread) => thread.id === threadId);
   if (!thread) throw new NotFoundError('Cannot find thread in game');
 
   const isPlayersTurn =

@@ -43,9 +43,7 @@ export default class ChangeParticipation extends Component<Props, State> {
       return;
     }
 
-    if (data.error) {
-      console.error(data.error);
-    }
+    if (data.error) console.error(data.error);
 
     this.setState({ joining: false });
   };
@@ -90,7 +88,7 @@ export default class ChangeParticipation extends Component<Props, State> {
         <form action="cancel" method="POST" onSubmit={this._onCancelSubmit}>
           <button class="button hero-button button-bad">Cancel game</button>
         </form>
-      ) : game.state === GameState.Open || game.turn <= userPlayer.order! ? (
+      ) : (
         <form
           action="leave"
           method="POST"
@@ -99,8 +97,6 @@ export default class ChangeParticipation extends Component<Props, State> {
         >
           <button class="button hero-button button-bad">Leave</button>
         </form>
-      ) : (
-        false
       ),
     ];
   }
