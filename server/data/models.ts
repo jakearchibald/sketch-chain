@@ -133,6 +133,7 @@ Thread.init(
 export class Turn extends Model implements SharedTurn {
   id!: number;
   threadId!: number;
+  playerId!: number;
   type!: TurnType;
   data!: string | null;
   readonly createdAt!: Date;

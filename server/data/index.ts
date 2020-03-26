@@ -22,6 +22,8 @@ import {
   Thread as SharedThread,
   Turn as SharedTurn,
   TurnType,
+  GamePageData,
+  ActiveTurnData,
 } from 'shared/types';
 import { minPlayers, maxDescriptionLength, maxImgSize } from 'shared/config';
 import { randomInt } from '../utils';
@@ -42,6 +44,7 @@ interface DataEmitter extends EventEmitter {
 export const emitter: DataEmitter = new EventEmitter();
 
 export class NotFoundError extends Error {}
+export class ForbiddenError extends Error {}
 
 function gameChanged(gameId: string) {
   emitter.emit('gamechange', gameId);
@@ -93,25 +96,13 @@ async function getLastPlayedTurnForThread(thread: SharedThread) {
   });
 }
 
-export async function getGame(id: string): Promise<SharedGame | null> {
-  const game = await getDBGame(id);
-  if (!game) return null;
-  return gameToSharedGame(game);
-}
-
 export async function getUsersGames(user: UserSession): Promise<SharedGame[]> {
   const gamePlayers = await Player.findAll({
     where: { userId: user.id },
     include: [Game],
   });
 
-  return gamePlayers.map(gamePlayer => gameToSharedGame(gamePlayer.game!));
-}
-
-interface GamePageData {
-  game: SharedGame;
-  inPlayThread?: SharedThread;
-  lastTurnInThread?: SharedTurn | null;
+  return gamePlayers.map((gamePlayer) => gameToSharedGame(gamePlayer.game!));
 }
 
 export async function getGamePageData(
@@ -121,13 +112,18 @@ export async function getGamePageData(
   const gameDB = await getDBGame(gameId);
   if (!gameDB) return null;
   const game = gameToSharedGame(gameDB);
-  const toReturn: GamePageData = { game };
+  const toReturn: GamePageData = {
+    game,
+    // It's important that these are explicitly set to undefined, for setState()
+    inPlayThread: undefined,
+    lastTurnInThread: undefined,
+  };
 
   if (game.state === GameState.Complete) {
     // If game is complete, add in turn data.
     const turnsDB = await Turn.findAll({
       where: {
-        threadId: { [Op.in]: game.threads!.map(thread => thread.id) },
+        threadId: { [Op.in]: game.threads!.map((thread) => thread.id) },
       },
       order: [
         ['threadId', 'ASC'],
@@ -151,34 +147,45 @@ export async function getGamePageData(
     }
   }
 
-  if (game.state === GameState.Playing) {
-    // Find out if we need to send last turn info.
-    const player =
-      userId && game.players!.find(player => player.userId === userId);
-
-    if (player) {
-      const activeThreads = game
-        .threads!.filter(pendingThreadsFilter(player))
-        .sort((a, b) => Number(a.turnUpdatedAt) - Number(b.turnUpdatedAt));
-
-      if (activeThreads[0]) {
-        toReturn.inPlayThread = activeThreads[0];
-        toReturn.lastTurnInThread = await getLastPlayedTurnForThread(
-          activeThreads[0],
-        );
-      }
-    }
+  if (userId) {
+    Object.assign(toReturn, await getActiveTurnDataForPlayer(game, userId));
   }
 
   return toReturn;
 }
 
+export async function getActiveTurnDataForPlayer(
+  game: SharedGame,
+  userId: string,
+): Promise<ActiveTurnData> {
+  if (game.state !== GameState.Playing) return {};
+
+  const player =
+    userId && game.players!.find((player) => player.userId === userId);
+
+  if (!player) return {};
+
+  const activeThread = game
+    .threads!.filter(pendingThreadsFilter(player))
+    .sort((a, b) => Number(a.turnUpdatedAt) - Number(b.turnUpdatedAt))[0];
+
+  if (!activeThread) return {};
+
+  return {
+    inPlayThread: activeThread,
+    lastTurnInThread:
+      (await getLastPlayedTurnForThread(activeThread)) || undefined,
+  };
+}
+
 export async function joinGame(id: string, user: UserSession): Promise<void> {
   const game = await getDBGame(id);
   if (!game) throw new NotFoundError('Cannot find game');
-  if (game.state !== GameState.Open) throw Error('Game not open to players');
+  if (game.state !== GameState.Open) {
+    throw new ForbiddenError('Game not open to players');
+  }
   // Quick exit if player already exists
-  if (game.players!.some(player => player.userId === user.id)) return;
+  if (game.players!.some((player) => player.userId === user.id)) return;
 
   await game.createPlayer({
     userId: user.id,
@@ -191,7 +198,7 @@ export async function joinGame(id: string, user: UserSession): Promise<void> {
 }
 
 async function handleTurnChanges(game: Game): Promise<void> {
-  if (game.threads!.every(thread => thread.complete)) {
+  if (game.threads!.every((thread) => thread.complete)) {
     await game.update({
       state: GameState.Complete,
     });
@@ -205,21 +212,34 @@ interface CreateTurnData {
 
 async function createTurn(
   thread: Thread,
-  player: Player,
-  totalPlayers: number,
+  players: Player[],
   turnData: CreateTurnData,
-) {
-  await Promise.all([
-    thread.createTurn({ ...turnData, playerId: player.id }),
-    thread.turn + 1 === totalPlayers
+): Promise<void> {
+  const player = players[(thread.turn + thread.turnOffset) % players.length];
+  const updatedThreadPromise =
+    thread.turn + 1 === players.length
       ? thread.update({
           complete: true,
         })
       : thread.update({
           turn: thread.turn + 1,
           turnUpdatedAt: new Date(),
-        }),
+        });
+
+  await Promise.all([
+    thread.createTurn({ ...turnData, playerId: player.id }),
+    updatedThreadPromise,
   ]);
+
+  const updatedThread = await updatedThreadPromise;
+  if (updatedThread.complete) return;
+
+  const nextPlayer =
+    players[(updatedThread.turn + updatedThread.turnOffset) % players.length];
+
+  if (nextPlayer.leftGame) {
+    createTurn(updatedThread, players, { type: TurnType.Skip });
+  }
 }
 
 /**
@@ -228,7 +248,7 @@ async function createTurn(
  * @param player
  * @returns The threads that are waiting on player
  */
-export const pendingThreadsFilter = (player: SharedPlayer) => (
+const pendingThreadsFilter = (player: SharedPlayer) => (
   thread: SharedThread,
   _: number,
   threads: SharedThread[],
@@ -236,17 +256,40 @@ export const pendingThreadsFilter = (player: SharedPlayer) => (
   !thread.complete &&
   (thread.turn + thread.turnOffset) % threads.length === player.order;
 
-export async function leaveGame(gameId: string, userId: string): Promise<void> {
+/**
+ *
+ * @param gameId
+ * @param userId
+ * @param currentUserId The ID of the user requesting the removal
+ */
+export async function leaveGame(
+  gameId: string,
+  userId: string,
+  currentUserId: string,
+): Promise<void> {
   const game = await getDBGame(gameId);
   if (!game) throw new NotFoundError('Cannot find game');
 
-  const player = game.players!.find(player => player.userId === userId);
+  const player = game.players!.find((player) => player.userId === userId);
   if (!player) return;
 
-  if (player.isAdmin) throw Error('Admin cannot leave a game');
+  if (player.isAdmin) {
+    throw new ForbiddenError('Admin cannot leave a game');
+  }
 
   if (game.state === GameState.Complete) {
-    throw Error('Cannot leave a completed game');
+    throw new ForbiddenError('Cannot leave a completed game');
+  }
+
+  if (userId !== currentUserId) {
+    const currentPlayer = game.players!.find(
+      (player) => player.userId === currentUserId,
+    );
+    if (!currentPlayer || !currentPlayer.isAdmin) {
+      throw new ForbiddenError(
+        'Only the admin can remove others from the game',
+      );
+    }
   }
 
   const pendingThreads = game.threads!.filter(pendingThreadsFilter(player));
@@ -256,8 +299,8 @@ export async function leaveGame(gameId: string, userId: string): Promise<void> {
       leftGame: true,
     }),
     // Create skip turns for any waiting threads
-    ...pendingThreads.map(thread =>
-      createTurn(thread, player, game.players!.length, {
+    ...pendingThreads.map((thread) =>
+      createTurn(thread, game.players!, {
         type: TurnType.Skip,
       }),
     ),
@@ -267,19 +310,47 @@ export async function leaveGame(gameId: string, userId: string): Promise<void> {
   gameChanged(game.id);
 }
 
-export async function cancelGame(gameId: string): Promise<void> {
+export async function cancelGame(
+  gameId: string,
+  currentUserId: string,
+): Promise<void> {
   const game = await getDBGame(gameId);
   if (!game) throw new NotFoundError('Cannot find game');
-  if (game.state === GameState.Complete) throw Error('Game already complete');
+  if (game.state === GameState.Complete) {
+    throw new ForbiddenError('Game already complete');
+  }
+
+  const player = game.players!.find(
+    (player) => player.userId === currentUserId,
+  );
+
+  if (!player || !player.isAdmin) {
+    throw new ForbiddenError('Only admins can cancel a game');
+  }
   await game.destroy();
   gameChanged(game.id);
 }
 
-export async function startGame(gameId: string): Promise<void> {
+export async function startGame(
+  gameId: string,
+  currentUserId: string,
+): Promise<void> {
   const game = await getDBGame(gameId);
   if (!game) throw new NotFoundError('Cannot find game');
-  if (game.state !== GameState.Open) throw Error('Game already started');
-  if (game.players!.length < minPlayers) throw Error('Not enough players');
+  if (game.state !== GameState.Open) {
+    throw new ForbiddenError('Game already started');
+  }
+  if (game.players!.length < minPlayers) {
+    throw new ForbiddenError('Not enough players');
+  }
+
+  const player = game.players!.find(
+    (player) => player.userId === currentUserId,
+  );
+
+  if (!player || !player.isAdmin) {
+    throw new ForbiddenError('Only admins can cancel a game');
+  }
 
   const playersToRandomise = [...game.players!];
   const randomPlayers: Player[] = [];
@@ -319,14 +390,14 @@ function sanitizeDrawingData(json: string): string {
   const data = String(imageData.data);
 
   if (width <= 0 || width > maxImgSize || height <= 0 || height > maxImgSize) {
-    throw Error('Invalid image size');
+    throw new ForbiddenError('Invalid image size');
   }
 
   try {
     Buffer.from(data, 'base64');
   } catch (err) {
     console.error(err);
-    throw Error('Invalid path data');
+    throw new ForbiddenError('Invalid path data');
   }
 
   return JSON.stringify({ data, width, height });
@@ -334,22 +405,22 @@ function sanitizeDrawingData(json: string): string {
 
 export async function playTurn(
   gameId: string,
-  threadIndex: number,
+  threadId: number,
   userId: string,
   turnData: string,
 ): Promise<void> {
   const game = await getDBGame(gameId);
   if (!game) throw new NotFoundError('Cannot find game');
-  const player = game.players!.find(player => player.userId === userId);
-  if (!player) throw Error('Cannot find player in this game');
-  const thread = game.threads![threadIndex];
-  if (!thread) throw Error('Cannot find thread in game');
+  const player = game.players!.find((player) => player.userId === userId);
+  if (!player) throw new NotFoundError('Cannot find player in this game');
+  const thread = game.threads!.find((thread) => (thread.id = threadId));
+  if (!thread) throw new NotFoundError('Cannot find thread in game');
 
   const isPlayersTurn =
     !thread.complete &&
-    (thread.turn + thread.turnOffset) % game.threads!.length === player.order;
+    (thread.turn + thread.turnOffset) % game.players!.length === player.order;
 
-  if (!isPlayersTurn) throw Error(`It isn't this player's turn`);
+  if (!isPlayersTurn) throw new ForbiddenError(`It isn't this player's turn`);
 
   const lastPlayedTurn = await getLastPlayedTurnForThread(thread);
   const turnType =
@@ -366,12 +437,12 @@ export async function playTurn(
   } else {
     // Is description
     if (trimmedTurnData.length > maxDescriptionLength) {
-      throw Error('Description too long');
+      throw new ForbiddenError('Description too long');
     }
     sanitizedTurnData = trimmedTurnData;
   }
 
-  await createTurn(thread, player, game.players!.length, {
+  await createTurn(thread, game.players!, {
     type: turnType,
     data: sanitizedTurnData,
   });
@@ -383,26 +454,28 @@ export async function playTurn(
 const gameToSharedGame = (game: Game): SharedGame => ({
   id: game.id,
   state: game.state,
-  players: game.players?.map(player => ({
+  players: game.players?.map((player) => ({
     id: player.id,
     userId: player.userId,
     name: player.name,
     avatar: player.avatar,
     isAdmin: player.isAdmin,
+    leftGame: player.leftGame,
     order: player.order,
   })),
-  threads: game.threads?.map(thread => ({
+  threads: game.threads?.map((thread) => ({
     id: thread.id,
     turn: thread.turn,
     turnOffset: thread.turnOffset,
     complete: thread.complete,
     turnUpdatedAt: thread.turnUpdatedAt,
-    turns: thread.turns?.map(turn => turnToSharedTurn(turn)),
+    turns: thread.turns?.map((turn) => turnToSharedTurn(turn)),
   })),
 });
 
 const turnToSharedTurn = (turn: Turn): SharedTurn => ({
   id: turn.id,
+  playerId: turn.playerId,
   type: turn.type,
   data: turn.data,
 });

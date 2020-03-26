@@ -12,7 +12,7 @@
  */
 import { h, Component } from 'preact';
 
-import { Player } from 'shared/types';
+import { Player, Thread } from 'shared/types';
 import { maxDescriptionLength } from 'shared/config';
 
 interface Props {
@@ -20,19 +20,22 @@ interface Props {
   // It would only be if the game started
   // and everyone else left during the first turn.
   nextPlayer?: Player;
+  thread: Thread;
   submitting: boolean;
-  onSubmit: (turnData: string) => void;
+  onSubmit: (turnData: URLSearchParams) => void;
 }
 
 export default class FirstRound extends Component<Props> {
   private _onSubmit = (event: Event) => {
     const form = event.target as HTMLFormElement;
-    const input = form.turn as HTMLInputElement;
-    this.props.onSubmit(input.value);
+    const data = new URLSearchParams(
+      (new FormData(form) as unknown) as string[][],
+    );
+    this.props.onSubmit(data);
     event.preventDefault();
   };
 
-  render({ nextPlayer, submitting }: Props) {
+  render({ nextPlayer, submitting, thread }: Props) {
     return (
       <div>
         <div class="content-box">
@@ -45,8 +48,9 @@ export default class FirstRound extends Component<Props> {
           >
             <p>
               Describe something for{' '}
-              {nextPlayer ? nextPlayer.name : 'the next plater'} to draw:
+              {nextPlayer ? nextPlayer.name : 'the next player'} to draw:
             </p>
+            <input type="hidden" name="thread" value={thread.id} />
             <div class="input-submit">
               <input
                 class="large-text-input"

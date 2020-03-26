@@ -11,31 +11,38 @@
  * limitations under the License.
  */
 import { h, FunctionalComponent } from 'preact';
-import { Game as GameType, Player, GameState } from 'shared/types';
+import { Game as GameType, GameState, Thread, Turn } from 'shared/types';
 import PendingGame from './pending-game';
 import ActiveGame from './active-game';
 
 interface Props {
   userId?: string;
   game: GameType;
-  players: Player[];
+  inPlayThread?: Thread;
+  lastTurnInThread?: Turn;
 }
 
 const IncompleteGame: FunctionalComponent<Props> = ({
   userId,
   game,
-  players,
+  inPlayThread,
+  lastTurnInThread,
 }) => {
   const userPlayer = userId
-    ? players.find(player => player.userId === userId)
+    ? game.players!.find((player) => player.userId === userId)
     : undefined;
 
   return (
     <div>
       {game.state === GameState.Open ? (
-        <PendingGame userPlayer={userPlayer} game={game} players={players} />
+        <PendingGame userPlayer={userPlayer} game={game} />
       ) : (
-        <ActiveGame userPlayer={userPlayer} game={game} players={players} />
+        <ActiveGame
+          userPlayer={userPlayer}
+          game={game}
+          inPlayThread={inPlayThread}
+          lastTurnInThread={lastTurnInThread}
+        />
       )}
     </div>
   );

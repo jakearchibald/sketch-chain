@@ -47,11 +47,13 @@ const GamePage: FunctionalComponent<Props> = ({
       {game.state !== GameState.Complete
         ? [
             <script type="module" src={activeBundleURL} />,
-            ...activeImports.map(i => <link rel="modulepreload" href={i} />),
+            ...activeImports.map((i) => <link rel="modulepreload" href={i} />),
           ]
         : [
             <script type="module" src={completeBundleURL} />,
-            ...completeImports.map(i => <link rel="modulepreload" href={i} />),
+            ...completeImports.map((i) => (
+              <link rel="modulepreload" href={i} />
+            )),
           ]}
     </head>
     <body>
@@ -65,7 +67,12 @@ const GamePage: FunctionalComponent<Props> = ({
         {game.state == GameState.Complete ? (
           <CompleteGame game={game} />
         ) : (
-          <IncompleteGame userId={user && user.id} game={game} />
+          <IncompleteGame
+            userId={user && user.id}
+            game={game}
+            inPlayThread={inPlayThread}
+            lastTurnInThread={lastTurnInThread}
+          />
         )}
       </div>
     </body>

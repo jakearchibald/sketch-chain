@@ -19,7 +19,6 @@ import WhatIsThis from 'shared/components/what-is-this';
 interface Props {
   userPlayer?: Player;
   game: Game;
-  players: Player[];
 }
 
 interface State {
@@ -36,13 +35,11 @@ export default class PendingGame extends Component<Props, State> {
     this.setState({ starting: true });
     const response = await fetch('start?json=1', { method: 'POST' });
     const data = await response.json();
-    if (data.error) {
-      console.error(data.error);
-    }
+    if (data.error) console.error(data.error);
     this.setState({ starting: false });
   };
 
-  render({ players, game, userPlayer }: Props, { starting }: State) {
+  render({ game, userPlayer }: Props, { starting }: State) {
     return (
       <div>
         {userPlayer?.isAdmin ? (
@@ -61,7 +58,7 @@ export default class PendingGame extends Component<Props, State> {
         )}
         <div class="hero-button-container">
           <ChangeParticipation game={game} userPlayer={userPlayer} />
-          {userPlayer?.isAdmin && players.length >= minPlayers && (
+          {userPlayer?.isAdmin && game.players!.length >= minPlayers && (
             <form
               action="start"
               method="POST"
@@ -76,7 +73,7 @@ export default class PendingGame extends Component<Props, State> {
           <h2 class="content-box-title">Players</h2>
           <div class="content-padding">
             <ul class="player-list">
-              {players.map(player => (
+              {game.players!.map((player) => (
                 <li key={player.userId}>
                   {player.avatar && (
                     <img

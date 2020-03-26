@@ -12,14 +12,16 @@
  */
 import { h, Component } from 'preact';
 
-import { Player } from 'shared/types';
+import { Player, Turn, Thread } from 'shared/types';
 import { maxDescriptionLength } from 'shared/config';
 import CompleteDrawing from 'shared/components/complete-drawing';
 
 interface Props {
   previousPlayer: Player;
+  previousTurn: Turn;
+  thread: Thread;
   submitting: boolean;
-  onSubmit: (turnData: string) => void;
+  onSubmit: (turnData: URLSearchParams) => void;
 }
 
 interface TurnData {
@@ -34,15 +36,17 @@ export default class DescribeRound extends Component<Props> {
 
   private _onSubmit = (event: Event) => {
     const form = event.target as HTMLFormElement;
-    const input = form.turn as HTMLInputElement;
-    this.props.onSubmit(input.value);
+    const data = new URLSearchParams(
+      (new FormData(form) as unknown) as string[][],
+    );
+    this.props.onSubmit(data);
     event.preventDefault();
   };
 
-  render({ previousPlayer, submitting }: Props) {
-    if (this._cachedTurnData !== previousPlayer.turnData) {
-      this._parsedTurnData = JSON.parse(previousPlayer.turnData!);
-      this._cachedTurnData = previousPlayer.turnData!;
+  render({ previousPlayer, submitting, thread, previousTurn }: Props) {
+    if (this._cachedTurnData !== previousTurn.data) {
+      this._parsedTurnData = JSON.parse(previousTurn.data!);
+      this._cachedTurnData = previousTurn.data!;
     }
 
     return (
@@ -63,6 +67,7 @@ export default class DescribeRound extends Component<Props> {
             class="content-padding"
           >
             <p>What do you think {previousPlayer.name} drew here?</p>
+            <input type="hidden" name="thread" value={thread.id} />
             <div class="input-submit">
               <input
                 class="large-text-input"

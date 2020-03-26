@@ -14,7 +14,7 @@ import { h, Component, createRef } from 'preact';
 import PointerTracker from 'pointer-tracker';
 import simplify from 'simplify-js';
 
-import { Player } from 'shared/types';
+import { Player, Turn, Thread } from 'shared/types';
 import isServer from 'consts:isServer';
 import { bufferToBase64 } from 'shared/base64';
 import { penUp, maxDrawingVal } from 'shared/config';
@@ -86,7 +86,9 @@ const mqList =
 interface Props {
   previousPlayer: Player;
   submitting: boolean;
-  onSubmit: (turnData: string) => void;
+  previousTurn: Turn;
+  thread: Thread;
+  onSubmit: (turnData: URLSearchParams) => void;
 }
 
 interface State {
@@ -162,12 +164,16 @@ export default class DrawingRound extends Component<Props, State> {
     );
     const uint8 = new Uint8Array(dataArray.buffer);
     const data = bufferToBase64(uint8.buffer);
-    const body = JSON.stringify({
+    const turn = JSON.stringify({
       width: finalWidth,
       height: finalHeight,
       data,
     });
-    this.props.onSubmit(body);
+    const formData = new URLSearchParams({
+      turn,
+      thread: this.props.thread.id.toString(),
+    });
+    this.props.onSubmit(formData);
   };
 
   private _onMqChange = () => {
@@ -230,7 +236,7 @@ export default class DrawingRound extends Component<Props, State> {
           this._context!.stroke();
         }
       },
-      end: pointer => {
+      end: (pointer) => {
         const { width, height } = canvas.getBoundingClientRect();
         const linePoints = simplify(activePointers.get(pointer.id)!, 0.8);
         activePointers.delete(pointer.id);
@@ -250,11 +256,11 @@ export default class DrawingRound extends Component<Props, State> {
 
   componentWillUnmount() {
     mqList!.removeListener(this._onMqChange);
-    // TODO: should remove pointer tracker listeners if it exists
+    this._pointerTracker!.stop();
   }
 
   render(
-    { previousPlayer, submitting }: Props,
+    { previousPlayer, submitting, previousTurn }: Props,
     { drawingBegun, desktopMode, fallbackFullscreen }: State,
   ) {
     return (
@@ -263,8 +269,7 @@ export default class DrawingRound extends Component<Props, State> {
           <h2 class="content-box-title">Draw it!</h2>
           <div class="content-padding">
             <p>
-              {previousPlayer.name} wants you to draw "
-              {previousPlayer.turnData!}".
+              {previousPlayer.name} wants you to draw "{previousTurn.data!}".
             </p>
           </div>
         </div>
@@ -290,7 +295,7 @@ export default class DrawingRound extends Component<Props, State> {
               drawingBegun ? '' : 'allow-canvas-resize'
             }`}
           >
-            <div class="thing-to-draw">"{previousPlayer.turnData!}"</div>
+            <div class="thing-to-draw">"{previousTurn.data!}"</div>
             <div class="canvas-container">
               <IframeOnResize onResize={this._iframeWindowResize} />
               <canvas class="drawing-canvas" ref={this._canvasMount} />

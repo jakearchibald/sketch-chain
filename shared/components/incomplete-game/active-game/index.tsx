@@ -11,14 +11,15 @@
  * limitations under the License.
  */
 import { h, Component } from 'preact';
-import { Game, Player } from 'shared/types';
+import { Game, Player, Thread, Turn } from 'shared/types';
 import ChangeParticipation from '../change-participation';
 import PlayerTurn from './player-turn';
 
 interface Props {
   userPlayer?: Player;
   game: Game;
-  players: Player[];
+  inPlayThread?: Thread;
+  lastTurnInThread?: Turn;
 }
 
 interface State {
@@ -47,17 +48,24 @@ export default class ActiveGame extends Component<Props, State> {
     this.setState({ removing: false });
   };
 
-  render({ players, userPlayer, game }: Props, { removing }: State) {
+  render(
+    { userPlayer, game, inPlayThread, lastTurnInThread }: Props,
+    { removing }: State,
+  ) {
     return (
       <div>
-        {userPlayer?.order! === game.turn ? (
-          <PlayerTurn userPlayer={userPlayer!} players={players} />
+        {inPlayThread ? (
+          <PlayerTurn
+            players={game.players!}
+            thread={inPlayThread}
+            previousTurn={lastTurnInThread}
+          />
         ) : (
           <div class="content-box">
-            <h2 class="content-box-title">Taking turns</h2>
+            <h2 class="content-box-title">Game state</h2>
             <div class="content-padding">
               <ol class="player-list">
-                {players.map(player => (
+                {game.players!.map((player) => (
                   <li key={player.userId}>
                     {player.avatar ? (
                       <img
@@ -71,26 +79,42 @@ export default class ActiveGame extends Component<Props, State> {
                       <div />
                     )}
                     <div>
-                      {player.name} {player.order === game.turn && '⬅️'}
+                      {player.name}
+                      <div class="player-round-status">
+                        {game.threads!.map((thread) => {
+                          const actualTurn =
+                            (thread.turn + thread.turnOffset) %
+                            game.players!.length;
+                          return (
+                            <div
+                              class={`player-round-status-item ${
+                                thread.complete || actualTurn > player.order!
+                                  ? 'status-complete'
+                                  : actualTurn === player.order!
+                                  ? 'status-active'
+                                  : 'status-pending'
+                              }`}
+                            ></div>
+                          );
+                        })}
+                      </div>
                     </div>
                     <div>
-                      {userPlayer?.isAdmin &&
-                        !player.isAdmin &&
-                        player.order! >= game.turn && (
-                          <form
-                            action="leave"
-                            method="POST"
-                            onSubmit={this._onRemoveSubmit}
-                            disabled={removing}
-                          >
-                            <input
-                              type="hidden"
-                              name="player"
-                              value={player.userId}
-                            />
-                            <button class="button button-bad">Remove</button>
-                          </form>
-                        )}
+                      {userPlayer?.isAdmin && !player.isAdmin && (
+                        <form
+                          action="leave"
+                          method="POST"
+                          onSubmit={this._onRemoveSubmit}
+                          disabled={removing}
+                        >
+                          <input
+                            type="hidden"
+                            name="player"
+                            value={player.userId}
+                          />
+                          <button class="button button-bad">Remove</button>
+                        </form>
+                      )}
                     </div>
                   </li>
                 ))}

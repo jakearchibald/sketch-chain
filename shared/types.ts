@@ -38,6 +38,7 @@ export interface Player {
   name: string;
   avatar: string | null;
   isAdmin: boolean;
+  leftGame: boolean;
   order: number | null;
 }
 
@@ -52,6 +53,16 @@ export interface Thread {
 
 export interface Turn {
   id: number;
+  playerId: number;
   type: TurnType;
   data: string | null;
+}
+
+export interface GamePageData extends ActiveTurnData {
+  game: Game;
+}
+
+export interface ActiveTurnData {
+  inPlayThread?: Thread;
+  lastTurnInThread?: Turn;
 }
