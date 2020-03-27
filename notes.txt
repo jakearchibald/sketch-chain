@@ -55,8 +55,6 @@ Check for unused exports.
 When dealing with thread.turn + thread.turnOffset, it needs to mod on players length, not thread length.
 
 Next step:
-  Make sure web socket does the right thing.
-  Remove redundant things from model/index
   Set indexes on models. Look at all queries.
   Am I sending too much info to the client? Eg userId
   Error messages for failed actions.

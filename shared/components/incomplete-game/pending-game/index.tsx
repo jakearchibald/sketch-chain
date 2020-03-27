@@ -80,11 +80,12 @@ export default class PendingGame extends Component<Props, State> {
                       width="40"
                       height="40"
                       alt=""
+                      class="avatar"
                       src={`${player.avatar}=s${40}-c`}
                       srcset={`${player.avatar}=s${80}-c 2x`}
                     />
                   )}
-                  <div>
+                  <div class="name">
                     {player.name} {player.isAdmin && '(admin)'}
                   </div>
                 </li>

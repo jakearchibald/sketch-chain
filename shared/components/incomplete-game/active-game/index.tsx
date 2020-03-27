@@ -56,6 +56,7 @@ export default class ActiveGame extends Component<Props, State> {
       <div>
         {inPlayThread && (
           <PlayerTurn
+            key={inPlayThread.id}
             players={game.players!}
             thread={inPlayThread}
             previousTurn={lastTurnInThread}
@@ -67,40 +68,43 @@ export default class ActiveGame extends Component<Props, State> {
             <ol class="player-list">
               {game.players!.map((player) => (
                 <li key={player.userId}>
-                  {player.avatar ? (
+                  {player.avatar && (
                     <img
                       width="40"
                       height="40"
                       alt=""
+                      class="avatar"
                       src={`${player.avatar}=s${40}-c`}
                       srcset={`${player.avatar}=s${80}-c 2x`}
                     />
-                  ) : (
-                    <div />
                   )}
-                  <div>
-                    {player.name}
-                    <div class="player-round-status">
-                      {game.threads!.map((thread) => {
-                        const actualTurn =
-                          (thread.turn + thread.turnOffset) %
-                          game.players!.length;
-                        return (
-                          <div
-                            class={`player-round-status-item ${
-                              thread.complete || actualTurn > player.order!
-                                ? 'status-complete'
-                                : actualTurn === player.order!
-                                ? 'status-active'
-                                : 'status-pending'
-                            }`}
-                          ></div>
-                        );
-                      })}
-                    </div>
+                  <div class="name">
+                    {player.name} {player.leftGame && '(left game)'}
                   </div>
-                  <div>
-                    {userPlayer?.isAdmin && !player.isAdmin && (
+                  <div class="player-round-status">
+                    {game.threads!.map((thread) => {
+                      const normalisedTurn =
+                        player.order! < thread.turnOffset
+                          ? player.order! -
+                            thread.turnOffset +
+                            game.players!.length
+                          : player.order! - thread.turnOffset;
+
+                      return (
+                        <div
+                          class={`player-round-status-item ${
+                            thread.complete || thread.turn > normalisedTurn!
+                              ? 'status-complete'
+                              : thread.turn === normalisedTurn!
+                              ? 'status-active'
+                              : 'status-pending'
+                          }`}
+                        ></div>
+                      );
+                    })}
+                  </div>
+                  {userPlayer?.isAdmin && !player.isAdmin && (
+                    <div class="remove">
                       <form
                         action="leave"
                         method="POST"
@@ -114,8 +118,8 @@ export default class ActiveGame extends Component<Props, State> {
                         />
                         <button class="button button-bad">Remove</button>
                       </form>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </li>
               ))}
             </ol>

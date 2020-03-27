@@ -95,7 +95,11 @@ Player.init(
   },
   {
     sequelize,
-    indexes: [{ unique: true, fields: ['gameId', 'userId'] }],
+    indexes: [
+      { unique: true, fields: ['gameId', 'userId'] },
+      { fields: ['gameId', 'order'] },
+      { fields: ['userId'] },
+    ],
     modelName: 'player',
   },
 );
@@ -147,7 +151,7 @@ Turn.init(
   },
   {
     sequelize,
-    indexes: [{ unique: true, fields: ['threadId', 'playerId'] }],
+    indexes: [{ fields: ['threadId', 'createdAt'] }],
     modelName: 'turn',
   },
 );

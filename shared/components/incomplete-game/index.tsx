@@ -29,7 +29,9 @@ const IncompleteGame: FunctionalComponent<Props> = ({
   lastTurnInThread,
 }) => {
   const userPlayer = userId
-    ? game.players!.find((player) => player.userId === userId)
+    ? game.players!.find(
+        (player) => player.userId === userId && !player.leftGame,
+      )
     : undefined;
 
   return (

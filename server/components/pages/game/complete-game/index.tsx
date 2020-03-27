@@ -37,7 +37,7 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
 
               if (turn.type === TurnType.Skip) {
                 return (
-                  <div class="content-padding">
+                  <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
                     <div class="avatar-description">
                       {player.avatar && (
                         <img
@@ -58,7 +58,7 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
 
               if (turn === firstTurn) {
                 return (
-                  <div class="content-padding">
+                  <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
                     <div class="avatar-description">
                       {player.avatar && (
                         <img
@@ -80,7 +80,9 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
               if (turn.type === TurnType.Draw) {
                 return (
                   <div>
-                    <div class="content-padding content-hr">
+                    <div
+                      class={`content-padding ${i === 0 ? '' : 'content-hr'}`}
+                    >
                       <div class="avatar-description">
                         {player.avatar && (
                           <img
@@ -117,7 +119,7 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
 
               // Else describe:
               return (
-                <div class="content-padding content-hr">
+                <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
                   <div class="avatar-description">
                     {player.avatar && (
                       <img
