@@ -74,6 +74,10 @@ function sendErrorResponse(res: Response, error: Error, json: boolean): void {
   res.send(error.message);
 }
 
+router.get('/:gameId', (req, res) =>
+  res.redirect(301, `${req.baseUrl}/${req.params.gameId}/`),
+);
+
 async function joinGameRoute(req: Request, res: Response): Promise<void> {
   const user = req.session!.user;
   const json = !!req.query.json;
