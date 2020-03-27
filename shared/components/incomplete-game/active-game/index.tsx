@@ -62,7 +62,7 @@ export default class ActiveGame extends Component<Props, State> {
             previousTurn={lastTurnInThread}
           />
         )}
-        <div class="content-box">
+        <div class="content-box content-sized">
           <h2 class="content-box-title">Game state</h2>
           <div class="content-padding">
             <ol class="player-list">

@@ -64,7 +64,7 @@ export default class FirstRound extends Component<Props> {
             </div>
           </form>
         </div>
-        <div class="content-box">
+        <div class="content-box content-sized">
           <h2 class="content-box-title">How to pick a topic</h2>
           <div class="content-padding">
             <p>

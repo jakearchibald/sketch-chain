@@ -15,7 +15,7 @@ import { h, FunctionalComponent } from 'preact';
 interface Props {}
 
 const WhatIsThis: FunctionalComponent<Props> = () => (
-  <div class="content-box">
+  <div class="content-box content-sized">
     <h2 class="content-box-title">What is this?</h2>
     <div class="content-padding">
       <p>

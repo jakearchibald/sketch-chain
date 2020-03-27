@@ -21,103 +21,20 @@ interface Props {
 
 const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
   <div>
-    <div>
-      {game.threads!.map((thread) => {
-        const firstTurn = thread.turns!.find(
-          (turn) => turn.type === TurnType.Describe,
-        );
+    {game.threads!.map((thread) => {
+      const firstTurn = thread.turns!.find(
+        (turn) => turn.type === TurnType.Describe,
+      );
 
-        return (
-          <div class="content-box">
-            {firstTurn && <h2 class="content-box-title">{firstTurn.data}</h2>}
-            {thread.turns!.map((turn, i) => {
-              const player = game.players![
-                (thread.turnOffset + i) % game.players!.length
-              ];
+      return (
+        <div class="content-box">
+          {firstTurn && <h2 class="content-box-title">{firstTurn.data}</h2>}
+          {thread.turns!.map((turn, i) => {
+            const player = game.players![
+              (thread.turnOffset + i) % game.players!.length
+            ];
 
-              if (turn.type === TurnType.Skip) {
-                return (
-                  <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
-                    <div class="avatar-description">
-                      {player.avatar && (
-                        <img
-                          width="40"
-                          height="40"
-                          alt=""
-                          src={`${player.avatar}=s${40}-c`}
-                          srcset={`${player.avatar}=s${80}-c 2x`}
-                        />
-                      )}
-                      <div class="avatar-description-description">
-                        <p>{player.name} skipped their turn.</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              if (turn === firstTurn) {
-                return (
-                  <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
-                    <div class="avatar-description">
-                      {player.avatar && (
-                        <img
-                          width="40"
-                          height="40"
-                          alt=""
-                          src={`${player.avatar}=s${40}-c`}
-                          srcset={`${player.avatar}=s${80}-c 2x`}
-                        />
-                      )}
-                      <div class="avatar-description-description">
-                        <p>{player.name} picked the topic.</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              if (turn.type === TurnType.Draw) {
-                return (
-                  <div>
-                    <div
-                      class={`content-padding ${i === 0 ? '' : 'content-hr'}`}
-                    >
-                      <div class="avatar-description">
-                        {player.avatar && (
-                          <img
-                            width="40"
-                            height="40"
-                            alt=""
-                            src={`${player.avatar}=s${40}-c`}
-                            srcset={`${player.avatar}=s${80}-c 2x`}
-                          />
-                        )}
-                        <div class="avatar-description-description">
-                          <p>{player.name} tried to draw that:</p>
-                        </div>
-                      </div>
-                    </div>
-                    {(() => {
-                      const turnData = JSON.parse(turn.data!);
-                      return (
-                        <div
-                          class="final-drawing-canvas-container"
-                          data-path={turnData.data}
-                        >
-                          <CompleteDrawing
-                            width={turnData.width}
-                            height={turnData.height}
-                            pathBase64={turnData.data}
-                          />
-                        </div>
-                      );
-                    })()}
-                  </div>
-                );
-              }
-
-              // Else describe:
+            if (turn.type === TurnType.Skip) {
               return (
                 <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
                   <div class="avatar-description">
@@ -131,18 +48,97 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
                       />
                     )}
                     <div class="avatar-description-description">
-                      <p>
-                        {player.name} thought that was "{turn.data}"
-                      </p>
+                      <p>{player.name} skipped their turn.</p>
                     </div>
                   </div>
                 </div>
               );
-            })}
-          </div>
-        );
-      })}
-    </div>
+            }
+
+            if (turn === firstTurn) {
+              return (
+                <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
+                  <div class="avatar-description">
+                    {player.avatar && (
+                      <img
+                        width="40"
+                        height="40"
+                        alt=""
+                        src={`${player.avatar}=s${40}-c`}
+                        srcset={`${player.avatar}=s${80}-c 2x`}
+                      />
+                    )}
+                    <div class="avatar-description-description">
+                      <p>{player.name} picked the topic.</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (turn.type === TurnType.Draw) {
+              return (
+                <div>
+                  <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
+                    <div class="avatar-description">
+                      {player.avatar && (
+                        <img
+                          width="40"
+                          height="40"
+                          alt=""
+                          src={`${player.avatar}=s${40}-c`}
+                          srcset={`${player.avatar}=s${80}-c 2x`}
+                        />
+                      )}
+                      <div class="avatar-description-description">
+                        <p>{player.name} tried to draw that:</p>
+                      </div>
+                    </div>
+                  </div>
+                  {(() => {
+                    const turnData = JSON.parse(turn.data!);
+                    return (
+                      <div
+                        class="final-drawing-canvas-container"
+                        data-path={turnData.data}
+                      >
+                        <CompleteDrawing
+                          width={turnData.width}
+                          height={turnData.height}
+                          pathBase64={turnData.data}
+                        />
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            }
+
+            // Else describe:
+            return (
+              <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
+                <div class="avatar-description">
+                  {player.avatar && (
+                    <img
+                      width="40"
+                      height="40"
+                      alt=""
+                      src={`${player.avatar}=s${40}-c`}
+                      srcset={`${player.avatar}=s${80}-c 2x`}
+                    />
+                  )}
+                  <div class="avatar-description-description">
+                    <p>
+                      {player.name} thought that was "{turn.data}"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    })}
   </div>
 );
 

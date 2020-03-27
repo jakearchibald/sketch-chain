@@ -58,22 +58,26 @@ const GamePage: FunctionalComponent<Props> = ({
     </head>
     <body>
       <LoginState user={user} />
-      <div class="content-box">
-        <div class="content-padding">
-          <h1 class="site-title">{siteTitle}</h1>
+      <div class="page-margin">
+        <div class="content-box">
+          <div class="content-padding">
+            <h1 class="site-title">
+              <a href="/">{siteTitle}</a>
+            </h1>
+          </div>
         </div>
-      </div>
-      <div class="game">
-        {game.state == GameState.Complete ? (
-          <CompleteGame game={game} />
-        ) : (
-          <IncompleteGame
-            userId={user && user.id}
-            game={game}
-            inPlayThread={inPlayThread}
-            lastTurnInThread={lastTurnInThread}
-          />
-        )}
+        <div class="game">
+          {game.state == GameState.Complete ? (
+            <CompleteGame game={game} />
+          ) : (
+            <IncompleteGame
+              userId={user && user.id}
+              game={game}
+              inPlayThread={inPlayThread}
+              lastTurnInThread={lastTurnInThread}
+            />
+          )}
+        </div>
       </div>
     </body>
   </html>

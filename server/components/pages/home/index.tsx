@@ -34,23 +34,29 @@ const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
       </head>
       <body>
         <LoginState user={user} />
-        <div class="content-box">
-          <div class="content-padding">
-            <h1 class="site-title">{siteTitle}</h1>
-          </div>
-        </div>
-        <form method="POST" action="/create-game" class="hero-button-container">
-          <button class="button hero-button">Create game</button>
-        </form>
-        {user && userGames && userGames.length ? (
+        <div class="page-margin">
           <div class="content-box">
-            <h2 class="content-box-title">Your games</h2>
             <div class="content-padding">
-              <GameList userGames={userGames} />
+              <h1 class="site-title">{siteTitle}</h1>
             </div>
           </div>
-        ) : undefined}
-        <WhatIsThis />
+          <form
+            method="POST"
+            action="/create-game"
+            class="hero-button-container"
+          >
+            <button class="button hero-button">Create game</button>
+          </form>
+          {user && userGames && userGames.length ? (
+            <div class="content-box">
+              <h2 class="content-box-title">Your games</h2>
+              <div class="content-padding">
+                <GameList userGames={userGames} />
+              </div>
+            </div>
+          ) : undefined}
+          <WhatIsThis />
+        </div>
       </body>
     </html>
   );

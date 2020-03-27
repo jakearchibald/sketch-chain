@@ -70,14 +70,26 @@ body {
   pointer-events: none;
 }
 
-.content-box {
-  background: #fff;
-  border: 5px solid #000;
-  margin: 1rem;
-  box-shadow: 7px 7px #000;
+.page-margin {
+  margin: 0 1rem;
 
   @media (min-width: 500px) {
     margin: 2rem;
+  }
+}
+
+.content-box {
+  background: #fff;
+  border: 5px solid #000;
+  margin: 1rem auto;
+  box-shadow: 7px 7px #000;
+
+  @media (min-width: 500px) {
+    margin: 2rem auto;
+  }
+
+  &.content-sized {
+    max-width: max-content;
   }
 
   & p {
@@ -111,6 +123,16 @@ body {
 .site-title {
   margin: 0;
   text-align: center;
+
+  & a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
 .hero-button-container {

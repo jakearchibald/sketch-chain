@@ -43,7 +43,7 @@ export default class PendingGame extends Component<Props, State> {
     return (
       <div>
         {userPlayer?.isAdmin ? (
-          <div class="content-box">
+          <div class="content-box content-sized">
             <h2 class="content-box-title">Waiting for players</h2>
             <div class="content-padding">
               <p>Share this page with others and get them to join.</p>
@@ -69,7 +69,7 @@ export default class PendingGame extends Component<Props, State> {
             </form>
           )}
         </div>
-        <div class="content-box">
+        <div class="content-box content-sized">
           <h2 class="content-box-title">Players</h2>
           <div class="content-padding">
             <ul class="player-list">

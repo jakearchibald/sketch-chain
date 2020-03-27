@@ -265,7 +265,7 @@ export default class DrawingRound extends Component<Props, State> {
   ) {
     return (
       <div>
-        <div class="content-box">
+        <div class="content-box content-sized">
           <h2 class="content-box-title">Draw it!</h2>
           <div class="content-padding">
             <p>
