@@ -13,7 +13,6 @@
 import { h, FunctionalComponent } from 'preact';
 
 import LoginState from 'server/components/login-state';
-import { Game, GamePlayer } from 'server/data/models';
 import IncompleteGame from 'shared/components/incomplete-game';
 import activeBundleURL, {
   imports as activeImports,
@@ -21,8 +20,7 @@ import activeBundleURL, {
 import completeBundleURL, {
   imports as completeImports,
 } from 'client-bundle:client/complete-game';
-import { GameState } from 'shared/types';
-import { gameToClientState } from 'server/data';
+import { GameState, Game, Thread, Turn } from 'shared/types';
 import cssURL from 'css:../styles.css';
 import CompleteGame from './complete-game';
 import { siteTitle } from 'shared/config';
@@ -30,10 +28,16 @@ import { siteTitle } from 'shared/config';
 interface Props {
   user?: UserSession;
   game: Game;
-  players: GamePlayer[];
+  inPlayThread: Thread | null;
+  lastTurnInThread: Turn | null;
 }
 
-const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => (
+const GamePage: FunctionalComponent<Props> = ({
+  user,
+  game,
+  inPlayThread,
+  lastTurnInThread,
+}) => (
   <html>
     <head>
       <title>{siteTitle} - Game</title>
@@ -43,14 +47,12 @@ const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => (
       {game.state !== GameState.Complete
         ? [
             <script type="module" src={activeBundleURL} />,
-            ...activeImports.map(i => (
-              <link rel="preload" as="script" href={i} crossOrigin="" />
-            )),
+            ...activeImports.map((i) => <link rel="modulepreload" href={i} />),
           ]
         : [
             <script type="module" src={completeBundleURL} />,
-            ...completeImports.map(i => (
-              <link rel="preload" as="script" href={i} crossOrigin="" />
+            ...completeImports.map((i) => (
+              <link rel="modulepreload" href={i} />
             )),
           ]}
     </head>
@@ -63,11 +65,13 @@ const GamePage: FunctionalComponent<Props> = ({ user, game, players }) => (
       </div>
       <div class="game">
         {game.state == GameState.Complete ? (
-          <CompleteGame game={game} players={players} />
+          <CompleteGame game={game} />
         ) : (
           <IncompleteGame
             userId={user && user.id}
-            {...gameToClientState(game)}
+            game={game}
+            inPlayThread={inPlayThread}
+            lastTurnInThread={lastTurnInThread}
           />
         )}
       </div>

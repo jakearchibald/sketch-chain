@@ -1,44 +1,25 @@
-Game
-  -Remove turn
-  has n GameThreads where n is num players
+Show states for a game:
+  For each player (ordered by order):
+    For each thread ordered by turn offset:
+      actualTurn = turn + turnOffset % threads.length
+      if player.order === actualTurn, ITS YO TURN (yellow)
+      if < then green
+      if > then grey
 
-GamePlayer
-  -Remove turnData
-  +removed - boolean (player's turns will be skipped)
+Which turn should a player be playing?
+  Filter threads:
+    actualTurn = turn + turnOffset % threads.length
+    player.order === actualTurn
 
-GameThread
-  gameId
-  turn - number (player index is = (turn + threadOffset) % playersLength)
-  threadOffset - 0-(num players-1) - offset from player order
-  state - playing or complete
-  Index: gameId
+  Get one with first update date.
+  Get previous turn that isn't skip.
 
-GameThreadTurn
-  threadId
-  userId
-  turnType - 'draw' or 'describe' or 'skipped'
-  turnData
-  Index on threadId + creationDate
+Game complete:
+  For each thread:
+    For each turn:
+      Output turn.
 
-UserPush
-  userId
-  pushEndpoint
-
-
-To figure out where everyone is in the game
-  Get Game, players, threads
-  The order on each player, plus the turn on each thread, plus the state, tells you who's doing what
-
-To let a player play
-  If the thread has landed on this player:
-    Get threads where turn + offset % playersLen = player order and thread is not complete
-      Join GameThreadTurn, creationDate ascending
-      Limit 1
-  This provides the previous turn if the current player needs it
-  The creation date ordering is important - if the player has two rounds pending, the oldest should always win
-    Otherwise they'll be drawing a thing, only for the screen to change to the next round.
-
-
+Avoid ORM objects in components
 
 Every hour:
   Look for games that ended over a day ago. Delete.
@@ -69,10 +50,13 @@ When JS enhances a form, use the form action rather than recreating it
 PointerTracker needs a way to release listeners
 Compress image turn upload data?
 Reset scroll on dynamic page change.
-Trim image on submission? Add a padding.
-Fullsceen button for drawing
+Switch to transactions.
+Check for unused exports.
+When dealing with thread.turn + thread.turnOffset, it needs to mod on players length, not thread length.
 
 Next step:
-  Change it so n number of games happen at once
-  Push notifications
-  Error messages for failed actions
+  Set indexes on models. Look at all queries.
+  Am I sending too much info to the client? Eg userId
+  Error messages for failed actions.
+  Stop using `disabled` on form elements.
+  Push notifications.

@@ -15,12 +15,12 @@ import cssURL from 'css:../styles.css';
 import LoginState from 'server/components/login-state';
 import GameList from 'server/components/game-list';
 import WhatIsThis from 'shared/components/what-is-this';
-import { UserGames } from 'server/data';
 import { siteTitle } from 'shared/config';
+import { Game } from 'shared/types';
 
 interface Props {
   user?: UserSession;
-  userGames?: UserGames[];
+  userGames?: Game[];
 }
 
 const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
@@ -49,9 +49,7 @@ const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
               <GameList userGames={userGames} />
             </div>
           </div>
-        ) : (
-          undefined
-        )}
+        ) : undefined}
         <WhatIsThis />
       </body>
     </html>

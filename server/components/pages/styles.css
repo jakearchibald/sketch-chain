@@ -168,13 +168,51 @@ body {
     border-top: 1px solid #000;
     padding: 1.6rem 0;
     display: grid;
-    grid-template-columns: max-content 1fr max-content;
+    grid-template-columns: [avatar] max-content [name] 1fr [status] max-content [remove] max-content;
     grid-gap: 0.5rem;
     align-items: center;
 
     &:first-child {
       border-top: none;
     }
+  }
+
+  & .avatar {
+    grid-column: avatar;
+  }
+
+  & .name {
+    grid-column: name;
+  }
+
+  & .player-round-status {
+    grid-column: status;
+  }
+
+  & .remove {
+    grid-column: remove;
+  }
+}
+
+.player-round-status {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  grid-gap: 3px;
+}
+
+.player-round-status-item {
+  --size: 12px;
+  width: var(--size);
+  height: var(--size);
+  background: #c7c7c7;
+
+  &.status-active {
+    background: #ffb100;
+  }
+
+  &.status-complete {
+    background: green;
   }
 }
 

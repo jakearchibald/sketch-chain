@@ -11,14 +11,15 @@
  * limitations under the License.
  */
 import { h, Component } from 'preact';
-import { Player } from 'shared/types';
+import { Player, Thread, Turn, TurnType } from 'shared/types';
 import FirstRound from './first-round';
 import DrawingRound from './drawing-round';
 import DescribeRound from './describe-round';
 
 interface Props {
   players: Player[];
-  userPlayer: Player;
+  thread: Thread;
+  previousTurn: Turn | null;
 }
 
 interface State {
@@ -30,41 +31,55 @@ export default class PlayerTurn extends Component<Props, State> {
     submitting: false,
   };
 
-  private _onTurnSubmit = async (turnData: string) => {
+  private _onTurnSubmit = async (turnData: URLSearchParams) => {
     this.setState({ submitting: true });
     const response = await fetch('play?json=1', {
       method: 'POST',
-      body: new URLSearchParams({ turn: turnData }),
+      body: turnData,
     });
     const data = await response.json();
-    if (data.error) {
-      console.error(data.error);
-    }
+    if (data.error) console.error(data.error);
     this.setState({ submitting: false });
   };
 
-  render({ userPlayer, players }: Props, { submitting }: State) {
-    const previousPlayer: Player | undefined = players[userPlayer.order! - 1];
-    const nextPlayer: Player | undefined = players[userPlayer.order! + 1];
+  render({ players, previousTurn, thread }: Props, { submitting }: State) {
+    const previousPlayer: Player | undefined = previousTurn
+      ? players.find((player) => player.id === previousTurn.playerId)
+      : undefined;
+
+    // The players in order for this particular thread.
+    const threadPlayers = [
+      ...players.slice(thread.turnOffset),
+      ...players.slice(0, thread.turnOffset),
+    ];
+
+    const nextPlayer = threadPlayers
+      .slice(thread.turn + 1)
+      .find((player) => !player.leftGame);
 
     return (
       <div>
-        {!previousPlayer ? (
+        {!previousTurn ? (
           <FirstRound
+            thread={thread}
             onSubmit={this._onTurnSubmit}
             nextPlayer={nextPlayer}
             submitting={submitting}
           />
-        ) : userPlayer.order! % 2 ? (
+        ) : previousTurn.type === TurnType.Describe ? (
           <DrawingRound
+            thread={thread}
+            previousTurn={previousTurn!}
             onSubmit={this._onTurnSubmit}
-            previousPlayer={previousPlayer}
+            previousPlayer={previousPlayer!}
             submitting={submitting}
           />
         ) : (
           <DescribeRound
+            thread={thread}
             onSubmit={this._onTurnSubmit}
-            previousPlayer={previousPlayer}
+            previousTurn={previousTurn!}
+            previousPlayer={previousPlayer!}
             submitting={submitting}
           />
         )}

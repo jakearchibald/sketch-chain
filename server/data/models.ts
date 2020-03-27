@@ -24,25 +24,37 @@ import {
   Association,
 } from 'sequelize';
 import { storageRoot } from '../config';
-import { Game as SharedGame, GameState, Player } from 'shared/types';
+import {
+  Game as SharedGame,
+  GameState,
+  Player as SharedPlayer,
+  TurnType,
+  Thread as SharedThread,
+  Turn as SharedTurn,
+} from 'shared/types';
 
 const sequelize = new Sequelize(`sqlite:${storageRoot}/db.db`);
 
 export class Game extends Model implements SharedGame {
   id!: string;
   state!: GameState;
-  turn!: number;
   endedAt!: Date | null;
   readonly createdAt!: Date;
   readonly updatedAt!: Date;
-  readonly gamePlayers?: GamePlayer[];
 
-  public getGamePlayers!: HasManyGetAssociationsMixin<GamePlayer>; // Note the null assertions!
-  public countGamePlayers!: HasManyCountAssociationsMixin;
-  public createGamePlayer!: HasManyCreateAssociationMixin<GamePlayer>;
+  readonly players?: Player[];
+  public getPlayers!: HasManyGetAssociationsMixin<Player>;
+  public countPlayers!: HasManyCountAssociationsMixin;
+  public createPlayer!: HasManyCreateAssociationMixin<Player>;
+
+  readonly threads?: Thread[];
+  public getThreads!: HasManyGetAssociationsMixin<Thread>;
+  public countThreads!: HasManyCountAssociationsMixin;
+  public createThread!: HasManyCreateAssociationMixin<Thread>;
 
   public static associations: {
-    gamePlayers: Association<Game, GamePlayer>;
+    players: Association<Game, Player>;
+    threads: Association<Game, Thread>;
   };
 }
 
@@ -51,50 +63,107 @@ Game.init(
     id: { type: STRING, primaryKey: true },
     state: { type: INTEGER, allowNull: false, defaultValue: GameState.Open },
     endedAt: { type: DATE, allowNull: true },
-    turn: { type: INTEGER, allowNull: false, defaultValue: 0 },
   },
   {
     sequelize,
-    indexes: [{ fields: ['endedAt'] }, { fields: ['createdAt'] }],
     modelName: 'game',
   },
 );
 
-export class GamePlayer extends Model implements Player {
+export class Player extends Model implements SharedPlayer {
+  id!: number;
   gameId!: string;
   userId!: string;
   name!: string;
   avatar!: string | null;
   isAdmin!: boolean;
+  leftGame!: boolean;
   order!: number | null;
-  turnData!: string | null;
   readonly createdAt!: Date;
   readonly updatedAt!: Date;
   readonly game?: Game;
 }
 
-GamePlayer.init(
+Player.init(
   {
     userId: { type: STRING, allowNull: false },
     name: { type: STRING, allowNull: false },
     avatar: { type: STRING, allowNull: true },
     isAdmin: { type: BOOLEAN, allowNull: false, defaultValue: false },
+    leftGame: { type: BOOLEAN, allowNull: false, defaultValue: false },
     order: { type: INTEGER, allowNull: true },
-    turnData: { type: TEXT, allowNull: true },
   },
   {
     sequelize,
     indexes: [
       { unique: true, fields: ['gameId', 'userId'] },
-      // This should be unique, but might not be as the fields are updating
       { fields: ['gameId', 'order'] },
       { fields: ['userId'] },
     ],
-    modelName: 'gamePlayer',
+    modelName: 'player',
   },
 );
 
-Game.hasMany(GamePlayer, { foreignKey: { allowNull: false } });
-GamePlayer.belongsTo(Game);
+export class Thread extends Model implements SharedThread {
+  id!: number;
+  turn!: number;
+  turnOffset!: number;
+  complete!: boolean;
+  turnUpdatedAt!: Date | null;
+  readonly createdAt!: Date;
+  readonly updatedAt!: Date;
+  readonly game?: Game;
+
+  readonly turns?: Turn[];
+  public getTurns!: HasManyGetAssociationsMixin<Turn>;
+  public countTurns!: HasManyCountAssociationsMixin;
+  public createTurn!: HasManyCreateAssociationMixin<Turn>;
+}
+
+Thread.init(
+  {
+    turn: { type: INTEGER, allowNull: false, defaultValue: 0 },
+    turnOffset: { type: INTEGER, allowNull: false },
+    complete: { type: BOOLEAN, allowNull: false, defaultValue: false },
+    turnUpdatedAt: { type: DATE, allowNull: true },
+  },
+  {
+    sequelize,
+    indexes: [{ unique: true, fields: ['gameId', 'turnOffset'] }],
+    modelName: 'thread',
+  },
+);
+
+export class Turn extends Model implements SharedTurn {
+  id!: number;
+  threadId!: number;
+  playerId!: number;
+  type!: TurnType;
+  data!: string | null;
+  readonly createdAt!: Date;
+  readonly updatedAt!: Date;
+}
+
+Turn.init(
+  {
+    type: { type: INTEGER, allowNull: false },
+    data: { type: TEXT, allowNull: true },
+  },
+  {
+    sequelize,
+    indexes: [{ fields: ['threadId', 'createdAt'] }],
+    modelName: 'turn',
+  },
+);
+
+Game.hasMany(Player, { foreignKey: { allowNull: false } });
+Player.belongsTo(Game);
+
+Game.hasMany(Thread, { foreignKey: { allowNull: false } });
+Thread.belongsTo(Game);
+
+Thread.hasMany(Turn, { foreignKey: { allowNull: false } });
+Turn.belongsTo(Thread);
+Turn.belongsTo(Player);
 
 sequelize.sync();

@@ -21,15 +21,16 @@ import { pathToRegexp } from 'path-to-regexp';
 import { renderPage } from 'server/render';
 import expressAsyncHandler from 'express-async-handler';
 import {
-  getGame,
   joinGame,
   leaveGame,
   cancelGame,
-  getGameClientState,
-  removeTurnDataFromState,
   emitter as dataEmitter,
   startGame,
   playTurn,
+  getGamePageData,
+  NotFoundError,
+  ForbiddenError,
+  getActiveTurnDataForPlayer,
 } from 'server/data';
 import GamePage from 'server/components/pages/game';
 import { getLoginRedirectURL } from 'server/auth';
@@ -43,42 +44,41 @@ export const router: Router = Router({
 router.get(
   '/:gameId/',
   expressAsyncHandler(async (req, res) => {
-    const game = await getGame(req.params.gameId);
-    if (!game) {
+    const user = req.session!.user;
+    const gameData = await getGamePageData(req.params.gameId, user?.id);
+
+    if (!gameData) {
       res.status(404).send('Game not found');
       return;
     }
 
-    const players = game.gamePlayers!;
-
-    res.send(
-      renderPage(
-        <GamePage game={game} players={players} user={req.session!.user} />,
-      ),
-    );
+    res.send(renderPage(<GamePage {...gameData} user={req.session!.user} />));
   }),
 );
 
-function sendErrorResponse(
-  res: Response,
-  status: number,
-  error: string,
-  json: boolean,
-): void {
+function sendErrorResponse(res: Response, error: Error, json: boolean): void {
+  const status =
+    error instanceof NotFoundError
+      ? 404
+      : error instanceof ForbiddenError
+      ? 403
+      : 500;
+
   res.status(status);
 
   if (json) {
-    res.json({ error });
+    res.json({ error: error.message });
     return;
   }
 
-  res.send(error);
+  res.send(error.message);
 }
 
 async function joinGameRoute(req: Request, res: Response): Promise<void> {
   const user = req.session!.user;
   const json = !!req.query.json;
 
+  // Redirect to login if user isn't logged in
   if (!user) {
     req.session!.allowGetJoinGame = true;
 
@@ -93,17 +93,10 @@ async function joinGameRoute(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const game = await getGame(req.params.gameId);
-
-  if (!game) {
-    sendErrorResponse(res, 404, 'Game not found', json);
-    return;
-  }
-
   try {
-    await joinGame(game, user);
+    await joinGame(req.params.gameId, user);
   } catch (err) {
-    sendErrorResponse(res, 500, err.message, json);
+    sendErrorResponse(res, err, json);
     return;
   }
 
@@ -111,7 +104,7 @@ async function joinGameRoute(req: Request, res: Response): Promise<void> {
     res.status(200).json({ ok: true });
     return;
   }
-  res.redirect(303, `/game/${game.id}/`);
+  res.redirect(303, `/game/${req.params.gameId}/`);
 }
 
 // GET requests to join games are only allowed if we've just sent the user
@@ -141,33 +134,13 @@ router.post(
   urlencoded({ extended: false }),
   expressAsyncHandler(async (req, res) => {
     const json = !!req.query.json;
-    const game = await getGame(req.params.gameId);
-
-    if (!game) {
-      sendErrorResponse(res, 404, 'Game not found', json);
-      return;
-    }
-
     const user = req.session!.user!;
     const toRemove = 'player' in req.body ? String(req.body.player) : user.id;
 
-    if (
-      toRemove !== user.id &&
-      game.gamePlayers!.find(player => player.isAdmin)!.userId !== user.id
-    ) {
-      sendErrorResponse(
-        res,
-        403,
-        'Only the admin can remove others from the game',
-        json,
-      );
-      return;
-    }
-
     try {
-      await leaveGame(game, toRemove);
+      await leaveGame(req.params.gameId, toRemove, user.id);
     } catch (err) {
-      sendErrorResponse(res, 500, err.message, json);
+      sendErrorResponse(res, err, json);
       return;
     }
 
@@ -175,7 +148,7 @@ router.post(
       res.status(200).json({ ok: true });
       return;
     }
-    res.redirect(303, `/game/${game.id}/`);
+    res.redirect(303, `/game/${req.params.gameId}/`);
   }),
 );
 
@@ -185,21 +158,11 @@ router.post(
   requireLogin(),
   expressAsyncHandler(async (req, res) => {
     const user = req.session!.user!;
-    const game = await getGame(req.params.gameId);
-    if (!game) {
-      res.status(404).send('Game not found');
-      return;
-    }
-
-    if (game.gamePlayers!.find(player => player.isAdmin)!.userId !== user.id) {
-      res.status(403).send('Only the admin can cancel the game');
-      return;
-    }
 
     try {
-      await cancelGame(game);
+      await cancelGame(req.params.gameId, user.id);
     } catch (err) {
-      res.status(500).send(err.message);
+      sendErrorResponse(res, err, false);
       return;
     }
     res.redirect(303, `/`);
@@ -213,21 +176,12 @@ router.post(
   expressAsyncHandler(async (req, res) => {
     const json = !!req.query.json;
     const user = req.session!.user!;
-    const game = await getGame(req.params.gameId);
-    if (!game) {
-      sendErrorResponse(res, 404, 'Game not found', json);
-      return;
-    }
-
-    if (game.gamePlayers!.find(player => player.isAdmin)!.userId !== user.id) {
-      sendErrorResponse(res, 403, 'Only the admin can start the game', json);
-      return;
-    }
+    //req.params.gameId
 
     try {
-      await startGame(game);
+      await startGame(req.params.gameId, user.id);
     } catch (err) {
-      sendErrorResponse(res, 500, err.message, json);
+      sendErrorResponse(res, err, json);
       return;
     }
 
@@ -236,7 +190,7 @@ router.post(
       return;
     }
 
-    res.redirect(303, `/game/${game.id}/`);
+    res.redirect(303, `/game/${req.params.gameId}/`);
   }),
 );
 
@@ -248,25 +202,14 @@ router.post(
   expressAsyncHandler(async (req, res) => {
     const json = !!req.query.json;
     const user = req.session!.user!;
-    const game = await getGame(req.params.gameId);
+    const gameId = req.params.gameId;
     const turnData = String(req.body.turn);
-
-    if (!game) {
-      sendErrorResponse(res, 404, 'Game not found', json);
-      return;
-    }
-
-    const player = game.gamePlayers!.find(player => player.userId === user.id);
-
-    if (!player) {
-      sendErrorResponse(res, 403, `You're not a player in this game`, json);
-      return;
-    }
+    const threadId = Number(req.body.thread);
 
     try {
-      await playTurn(game, player, turnData);
+      await playTurn(gameId, threadId, user.id, turnData);
     } catch (err) {
-      sendErrorResponse(res, 500, err.message, json);
+      sendErrorResponse(res, err, json);
       return;
     }
 
@@ -275,7 +218,7 @@ router.post(
       return;
     }
 
-    res.redirect(303, `/game/${game.id}/`);
+    res.redirect(303, `/game/${gameId}/`);
   }),
 );
 
@@ -287,13 +230,13 @@ const socketToGameId = new WeakMap<WebSocket, string>();
 const wss = new WebSocket.Server({ noServer: true });
 pingClients(wss);
 
-dataEmitter.on('gamechange', async gameId => {
+dataEmitter.on('gamechange', async (gameId) => {
   const sockets = gameToSockets.get(gameId);
   if (!sockets || sockets.length === 0) return;
-  const clientState = await getGameClientState(gameId);
+  const gameData = await getGamePageData(gameId);
 
   // Has the game been cancelled?
-  if (!clientState) {
+  if (!gameData) {
     const message = JSON.stringify({ cancelled: true });
 
     for (const socket of sockets) {
@@ -305,45 +248,42 @@ dataEmitter.on('gamechange', async gameId => {
     return;
   }
 
-  const stateMessage = JSON.stringify(clientState);
-  const stateNoTurnDataMessage = JSON.stringify(
-    removeTurnDataFromState(clientState),
+  const plainStateMessage = JSON.stringify(gameData);
+
+  await Promise.all(
+    sockets.map(async (socket) => {
+      if (socket.readyState !== WebSocket.OPEN) return;
+
+      let message = plainStateMessage;
+      const user = socketToUser.get(socket);
+
+      if (user) {
+        const activeTurnData = await getActiveTurnDataForPlayer(
+          gameData.game,
+          user.id,
+        );
+
+        if (activeTurnData.inPlayThread) {
+          message = JSON.stringify({ ...gameData, ...activeTurnData });
+        }
+      }
+
+      socket.send(message);
+    }),
   );
-
-  for (const socket of sockets) {
-    if (socket.readyState !== WebSocket.OPEN) continue;
-
-    const user = socketToUser.get(socket);
-    const userPlayer =
-      user && clientState.players.find(player => player.userId === user.id);
-    const includeTurnData =
-      userPlayer && clientState.game.turn === userPlayer.order;
-
-    socket.send(includeTurnData ? stateMessage : stateNoTurnDataMessage);
-  }
 });
 
-wss.on('connection', async ws => {
-  let clientState = await getGameClientState(socketToGameId.get(ws)!);
-  if (!clientState) return;
-
-  const user = socketToUser.get(ws);
-  const userPlayer =
-    user && clientState.players.find(player => player.userId === user.id);
-
-  // We only send the turn data if it's that user's turn
-  if (!userPlayer || clientState.game.turn !== userPlayer.order) {
-    clientState = removeTurnDataFromState(clientState);
-  }
-
-  ws.send(JSON.stringify(clientState));
+wss.on('connection', async (socket) => {
+  const user = socketToUser.get(socket);
+  const gameData = await getGamePageData(socketToGameId.get(socket)!, user?.id);
+  socket.send(JSON.stringify(gameData || { cancelled: true }));
 });
 
 export function upgrade(req: Request, socket: Socket, head: Buffer) {
   const parsedURL = parseURL(req.url);
   const path = parsedURL.path!;
 
-  wss.handleUpgrade(req, socket, head, ws => {
+  wss.handleUpgrade(req, socket, head, (ws) => {
     const gameId = socketPath.exec(path)![1];
 
     if (!gameToSockets.has(gameId)) gameToSockets.set(gameId, []);
