@@ -36,7 +36,7 @@ function resolveFileUrl({ fileName }) {
   return JSON.stringify('/' + fileName);
 }
 
-export default async function({ watch }) {
+export default async function ({ watch }) {
   await del('.data/dist');
 
   const tsPluginInstance = simpleTS('server', { watch });
@@ -55,7 +55,8 @@ export default async function({ watch }) {
       assetFileNames: 'assets/[name]-[hash][extname]',
       exports: 'named',
     },
-    watch: { clearScreen: false },
+    // Don't watch the ts files. Instead we watch the output from the ts compiler.
+    watch: { clearScreen: false, exclude: ['**/*.ts', '**/*.tsx'] },
     preserveModules: true,
     preserveSymlinks: true,
     plugins: [
