@@ -59,13 +59,10 @@ export default class PendingGame extends Component<Props, State> {
         <div class="hero-button-container">
           <ChangeParticipation game={game} userPlayer={userPlayer} />
           {userPlayer?.isAdmin && game.players!.length >= minPlayers && (
-            <form
-              action="start"
-              method="POST"
-              onSubmit={this._onStartSubmit}
-              disabled={starting}
-            >
-              <button class="button hero-button">Start game</button>
+            <form action="start" method="POST" onSubmit={this._onStartSubmit}>
+              <button class="button hero-button" disabled={starting}>
+                Start game
+              </button>
             </form>
           )}
         </div>

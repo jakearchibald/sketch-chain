@@ -126,14 +126,16 @@ export default class ActiveGame extends Component<Props, State> {
                         action="leave"
                         method="POST"
                         onSubmit={this._onRemoveSubmit}
-                        disabled={removing}
                       >
                         <input
                           type="hidden"
                           name="player"
                           value={player.userId}
+                          disabled={removing}
                         />
-                        <button class="button button-bad">Remove</button>
+                        <button class="button button-bad" disabled={removing}>
+                          Remove
+                        </button>
                       </form>
                     </div>
                   )}

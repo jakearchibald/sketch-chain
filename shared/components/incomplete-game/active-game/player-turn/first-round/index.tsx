@@ -40,17 +40,17 @@ export default class FirstRound extends Component<Props> {
       <div>
         <div class="content-box">
           <h2 class="content-box-title">Pick a topic</h2>
-          <form
-            action="play"
-            disabled={submitting}
-            onSubmit={this._onSubmit}
-            class="content-padding"
-          >
+          <form action="play" onSubmit={this._onSubmit} class="content-padding">
             <p>
               Describe something for{' '}
               {nextPlayer ? nextPlayer.name : 'the next player'} to draw:
             </p>
-            <input type="hidden" name="thread" value={thread.id} />
+            <input
+              disabled={submitting}
+              type="hidden"
+              name="thread"
+              value={thread.id}
+            />
             <div class="input-submit">
               <input
                 class="large-text-input"
@@ -59,8 +59,11 @@ export default class FirstRound extends Component<Props> {
                 placeholder="…"
                 required
                 maxLength={maxDescriptionLength}
+                disabled={submitting}
               />
-              <button class="button">Send it on</button>
+              <button class="button" disabled={submitting}>
+                Send it on
+              </button>
             </div>
           </form>
         </div>

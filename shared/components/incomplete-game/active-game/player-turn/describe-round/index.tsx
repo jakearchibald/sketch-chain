@@ -60,16 +60,12 @@ export default class DescribeRound extends Component<Props> {
         </div>
         <div class="content-box">
           <h2 class="content-box-title">What is it?</h2>
-          <form
-            action="play"
-            disabled={submitting}
-            onSubmit={this._onSubmit}
-            class="content-padding"
-          >
+          <form action="play" onSubmit={this._onSubmit} class="content-padding">
             <p>What do you think {previousPlayer.name} drew here?</p>
             <input type="hidden" name="thread" value={thread.id} />
             <div class="input-submit">
               <input
+                disabled={submitting}
                 class="large-text-input"
                 type="text"
                 name="turn"
@@ -77,7 +73,9 @@ export default class DescribeRound extends Component<Props> {
                 required
                 maxLength={maxDescriptionLength}
               />
-              <button class="button">Send it on</button>
+              <button class="button" disabled={submitting}>
+                Send it on
+              </button>
             </div>
           </form>
         </div>

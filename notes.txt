@@ -56,8 +56,6 @@ When dealing with thread.turn + thread.turnOffset, it needs to mod on players le
 
 Next step:
   Problem with context menu and cros pen
-  Limit number of open games per player?
-  Stop using `disabled` on form elements.
   Error messages for failed actions.
   Simple notifications.
   A bit of messaging around uptime.

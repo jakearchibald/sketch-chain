@@ -75,13 +75,10 @@ export default class ChangeParticipation extends Component<Props, State> {
     return [
       !userPlayer ? (
         game.state === GameState.Open && (
-          <form
-            action="join"
-            method="POST"
-            onSubmit={this._onJoinSubmit}
-            disabled={joining}
-          >
-            <button class="button hero-button">Join</button>
+          <form action="join" method="POST" onSubmit={this._onJoinSubmit}>
+            <button class="button hero-button" disabled={joining}>
+              Join
+            </button>
           </form>
         )
       ) : userPlayer.isAdmin ? (
@@ -89,13 +86,10 @@ export default class ChangeParticipation extends Component<Props, State> {
           <button class="button hero-button button-bad">Cancel game</button>
         </form>
       ) : (
-        <form
-          action="leave"
-          method="POST"
-          onSubmit={this._onLeaveSubmit}
-          disabled={leaving}
-        >
-          <button class="button hero-button button-bad">Leave</button>
+        <form action="leave" method="POST" onSubmit={this._onLeaveSubmit}>
+          <button class="button hero-button button-bad" disabled={leaving}>
+            Leave
+          </button>
         </form>
       ),
     ];
