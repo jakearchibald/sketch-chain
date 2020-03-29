@@ -100,6 +100,7 @@ export async function getUsersGames(user: UserSession): Promise<SharedGame[]> {
   const gamePlayers = await Player.findAll({
     where: { userId: user.id },
     include: [Game],
+    order: [[Game, 'createdAt', 'DESC']],
   });
 
   return gamePlayers.map((gamePlayer) => gameToSharedGame(gamePlayer.game!));

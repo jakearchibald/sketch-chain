@@ -67,6 +67,7 @@ Game.init(
   {
     sequelize,
     modelName: 'game',
+    indexes: [{ fields: ['createdAt'] }],
   },
 );
 
