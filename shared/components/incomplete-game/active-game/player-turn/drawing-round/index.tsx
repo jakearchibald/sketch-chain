@@ -182,13 +182,34 @@ export default class DrawingRound extends Component<Props, State> {
 
   private _beginArtingClick = () => {
     const el = this._drawingContainer.current as HTMLDivElement;
+    // The easy way:
     if ('requestFullscreen' in el) {
       el.requestFullscreen();
       return;
     }
-    document.documentElement.style.overflow = 'hidden';
-    this.setState({ fallbackFullscreen: true });
+    // The iOS Safari way
+    this._startFallbackFullscreen();
   };
+
+  private _fallbackFullscreenUpdateSize = () => {
+    this._drawingContainer.current.style.height =
+      document.documentElement.clientHeight + 'px';
+  };
+
+  private _startFallbackFullscreen() {
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    window.addEventListener('resize', this._fallbackFullscreenUpdateSize);
+    this._fallbackFullscreenUpdateSize();
+    this.setState({ fallbackFullscreen: true });
+  }
+
+  private _stopFallbackFullscreen() {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    window.removeEventListener('resize', this._fallbackFullscreenUpdateSize);
+    this.setState({ fallbackFullscreen: false });
+  }
 
   componentDidMount() {
     mqList!.addListener(this._onMqChange);
@@ -257,6 +278,8 @@ export default class DrawingRound extends Component<Props, State> {
   componentWillUnmount() {
     mqList!.removeListener(this._onMqChange);
     this._pointerTracker!.stop();
+
+    if (this.state.fallbackFullscreen) this._stopFallbackFullscreen();
   }
 
   render(

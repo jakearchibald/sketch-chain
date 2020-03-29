@@ -55,9 +55,6 @@ Check for unused exports.
 When dealing with thread.turn + thread.turnOffset, it needs to mod on players length, not thread length.
 
 Next step:
-  Message to say you're waiting for others
-  iOS scroll broken after drawing
-    General iOS bugs?
   Problem with context menu and cros pen
   Order of games on the homepage.
   Limit number of open games per player?
