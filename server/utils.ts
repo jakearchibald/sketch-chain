@@ -12,11 +12,13 @@
  */
 import { Socket } from 'net';
 import { STATUS_CODES } from 'http';
-import { collections, predicates, teams, objects } from 'friendly-words';
 
+import { collections, predicates, teams, objects } from 'friendly-words';
 import WebSocket, { Server as WebSocketServer } from 'ws';
-import { RequestHandler } from 'express';
+import { RequestHandler, Response } from 'express';
+
 import { origin } from './config';
+import { NotFoundError, ForbiddenError } from './data';
 
 export function abortHandshake(
   socket: Socket,
@@ -35,7 +37,7 @@ export function abortHandshake(
     socket.write(
       `HTTP/1.1 ${code} ${STATUS_CODES[code]}\r\n` +
         Object.keys(headers)
-          .map(h => `${h}: ${headers[h]}`)
+          .map((h) => `${h}: ${headers[h]}`)
           .join('\r\n') +
         '\r\n\r\n' +
         message,
@@ -48,7 +50,7 @@ export function abortHandshake(
 export function pingClients(wss: WebSocketServer) {
   const aliveClients = new WeakSet<WebSocket>();
 
-  wss.on('connection', ws => {
+  wss.on('connection', (ws) => {
     aliveClients.add(ws);
     ws.on('pong', () => {
       aliveClients.add(ws);
@@ -90,3 +92,25 @@ export const createProbablyUniqueName = (() => {
   return () =>
     `${randomItem(predicates)}-${randomItem(objects)}-${randomItem(group)}`;
 })();
+
+export function sendErrorResponse(
+  res: Response,
+  error: Error,
+  json: boolean,
+): void {
+  const status =
+    error instanceof NotFoundError
+      ? 404
+      : error instanceof ForbiddenError
+      ? 403
+      : 500;
+
+  res.status(status);
+
+  if (json) {
+    res.json({ error: error.message });
+    return;
+  }
+
+  res.send(error.message);
+}

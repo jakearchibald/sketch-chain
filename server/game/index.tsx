@@ -28,13 +28,15 @@ import {
   startGame,
   playTurn,
   getGamePageData,
-  NotFoundError,
-  ForbiddenError,
   getActiveTurnDataForPlayer,
 } from 'server/data';
 import GamePage from 'server/components/pages/game';
 import { getLoginRedirectURL } from 'server/auth';
-import { requireSameOrigin, pingClients } from 'server/utils';
+import {
+  requireSameOrigin,
+  pingClients,
+  sendErrorResponse,
+} from 'server/utils';
 import { requireLogin } from 'server/auth';
 
 export const router: Router = Router({
@@ -55,24 +57,6 @@ router.get(
     res.send(renderPage(<GamePage {...gameData} user={req.session!.user} />));
   }),
 );
-
-function sendErrorResponse(res: Response, error: Error, json: boolean): void {
-  const status =
-    error instanceof NotFoundError
-      ? 404
-      : error instanceof ForbiddenError
-      ? 403
-      : 500;
-
-  res.status(status);
-
-  if (json) {
-    res.json({ error: error.message });
-    return;
-  }
-
-  res.send(error.message);
-}
 
 router.get('/:gameId', (req, res) =>
   res.redirect(301, `${req.baseUrl}/${req.params.gameId}/`),
@@ -117,7 +101,7 @@ router.get(
   '/:gameId/join',
   expressAsyncHandler((req, res) => {
     if (!req.session!.allowGetJoinGame) {
-      res.status(403).send('Must use POST request to create game');
+      res.status(403).send('Must use POST request to join game');
       return;
     }
     req.session!.allowGetJoinGame = false;

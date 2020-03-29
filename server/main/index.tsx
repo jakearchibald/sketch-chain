@@ -17,7 +17,7 @@ import { h } from 'preact';
 import expressAsyncHandler from 'express-async-handler';
 
 import { renderPage } from 'server/render';
-import { requireSameOrigin } from 'server/utils';
+import { requireSameOrigin, sendErrorResponse } from 'server/utils';
 import HomePage from 'server/components/pages/home';
 import { createGame, getUsersGames } from 'server/data';
 import { getLoginRedirectURL, requireAdmin } from 'server/auth';
@@ -30,7 +30,7 @@ router.get(
   '/',
   expressAsyncHandler(async (req, res) => {
     const user = req.session!.user;
-    const games = user ? await getUsersGames(user) : undefined;
+    const games = user ? await getUsersGames(user.id) : undefined;
     res
       .status(200)
       .send(renderPage(<HomePage user={user} userGames={games} />));
@@ -44,8 +44,13 @@ async function createGameRoute(req: Request, res: Response): Promise<void> {
     res.redirect(301, getLoginRedirectURL('/create-game'));
     return;
   }
-  const gameId = await createGame(user);
-  res.redirect(303, `/game/${gameId}/`);
+
+  try {
+    const gameId = await createGame(user);
+    res.redirect(303, `/game/${gameId}/`);
+  } catch (err) {
+    sendErrorResponse(res, err, false);
+  }
 }
 
 // GET requests to create games are only allowed if we've just sent the user

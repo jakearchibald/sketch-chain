@@ -67,7 +67,7 @@ Game.init(
   {
     sequelize,
     modelName: 'game',
-    indexes: [{ fields: ['createdAt'] }],
+    indexes: [{ fields: ['createdAt'] }, { fields: ['state'] }],
   },
 );
 
@@ -99,7 +99,7 @@ Player.init(
     indexes: [
       { unique: true, fields: ['gameId', 'userId'] },
       { fields: ['gameId', 'order'] },
-      { fields: ['userId'] },
+      { fields: ['userId', 'isAdmin'] },
     ],
     modelName: 'player',
   },

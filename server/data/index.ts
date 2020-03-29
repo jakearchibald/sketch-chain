@@ -28,6 +28,7 @@ import {
 import { minPlayers, maxDescriptionLength, maxImgSize } from 'shared/config';
 import { randomInt } from '../utils';
 import { Op } from 'sequelize';
+import { maxOpenGamesPerUser } from 'server/config';
 
 type GameChangeCallback = (gameId: string) => void;
 
@@ -55,6 +56,14 @@ function gameChanged(gameId: string) {
  * @returns ID of the new game.
  */
 export async function createGame(user: UserSession): Promise<string> {
+  const openGames = await countUncompleteGamesOwnedByUser(user.id);
+
+  if (openGames > maxOpenGamesPerUser) {
+    throw new ForbiddenError(
+      `Too many open games. Please finish some of your other games, or cancel them.`,
+    );
+  }
+
   while (true) {
     const id = createProbablyUniqueName();
 
@@ -96,9 +105,18 @@ async function getLastPlayedTurnForThread(thread: SharedThread) {
   });
 }
 
-export async function getUsersGames(user: UserSession): Promise<SharedGame[]> {
+function countUncompleteGamesOwnedByUser(userId: string): Promise<number> {
+  return Player.count({
+    where: { userId, isAdmin: true },
+    include: [
+      { model: Game, where: { state: { [Op.ne]: GameState.Complete } } },
+    ],
+  });
+}
+
+export async function getUsersGames(userId: string): Promise<SharedGame[]> {
   const gamePlayers = await Player.findAll({
-    where: { userId: user.id },
+    where: { userId },
     include: [Game],
     order: [[Game, 'createdAt', 'DESC']],
   });

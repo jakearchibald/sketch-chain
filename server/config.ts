@@ -28,6 +28,8 @@ export const storageRoot = process.env.STORAGE_ROOT || './.data/storage';
 
 export const admins = ['jaffathecake@gmail.com'];
 
+export const maxOpenGamesPerUser = 10;
+
 export const cookieSecret: string = process.env.COOKIE_SECRET!;
 if (!cookieSecret) throw Error('No cookie secret set');
 
