@@ -120,6 +120,16 @@ body {
   border-top: 5px solid #e2e2e2;
 }
 
+.content-controls {
+  background: #f7f7f7;
+  padding: 1rem;
+  display: grid;
+  grid-auto-columns: max-content;
+  grid-auto-flow: column;
+  grid-gap: 0.5rem;
+  justify-content: end;
+}
+
 .site-title {
   margin: 0;
   text-align: center;
@@ -390,4 +400,17 @@ body {
   & > :last-child {
     margin-bottom: 0;
   }
+}
+
+.modal {
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.6);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0 2.4rem;
+  display: flex;
+  align-items: center;
 }

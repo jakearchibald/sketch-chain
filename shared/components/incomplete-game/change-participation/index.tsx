@@ -10,8 +10,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h, Component } from 'preact';
+import { h, Component, createRef } from 'preact';
+import { createPortal } from 'preact/compat';
+
 import { Game, Player, GameState } from 'shared/types';
+import isServer from 'consts:isServer';
+import Modal from 'shared/components/modal';
 
 interface Props {
   game: Game;
@@ -22,13 +26,22 @@ interface Props {
 interface State {
   joining: boolean;
   leaving: boolean;
+  confirmCancel: boolean;
+  confirmLeave: boolean;
+  error?: { title: string; text: string };
 }
+
+const modals = isServer ? null : document.querySelector('.modals');
 
 export default class ChangeParticipation extends Component<Props, State> {
   state: State = {
     joining: false,
     leaving: false,
+    confirmCancel: false,
+    confirmLeave: false,
   };
+
+  private _cancelForm = createRef<HTMLFormElement>();
 
   private _onJoinSubmit = async (event: Event) => {
     // If there's no user, let them navigate through the login process
@@ -51,27 +64,70 @@ export default class ChangeParticipation extends Component<Props, State> {
   private _onLeaveSubmit = async (event: Event) => {
     event.preventDefault();
 
-    if (this.props.warnOnLeave && !confirm('Leave game?')) {
+    if (this.props.warnOnLeave) {
+      this.setState({ confirmLeave: true });
       return;
     }
 
-    this.setState({ leaving: true });
-    const response = await fetch('leave?json=1', { method: 'POST' });
-    const data = await response.json();
-    if (data.error) {
-      console.error(data.error);
-    }
-    this.setState({ leaving: false });
+    this._leaveGame();
   };
 
   private _onCancelSubmit = (event: Event) => {
-    if (!confirm('Cancel game?')) {
-      event.preventDefault();
-      return;
+    event.preventDefault();
+    this.setState({
+      confirmCancel: true,
+    });
+  };
+
+  private _clearModals = () => {
+    this.setState({
+      confirmCancel: false,
+      confirmLeave: false,
+    });
+  };
+
+  private _clearError = () => {
+    this.setState({
+      error: undefined,
+    });
+  };
+
+  private _modalCancelGameClick = () => {
+    this._cancelForm.current!.submit();
+  };
+
+  private _leaveGame = async () => {
+    this._clearModals();
+    this.setState({ leaving: true });
+
+    try {
+      const response = await fetch('leave?json=1', { method: 'POST' });
+      const data = await response.json();
+      if (data.error) {
+        this.setState({
+          error: {
+            title: 'Error',
+            text: data.error,
+          },
+        });
+        return;
+      }
+    } catch (err) {
+      this.setState({
+        error: {
+          title: 'Connection error',
+          text: `Couldn't connect to the server. Please try again.`,
+        },
+      });
+    } finally {
+      this.setState({ leaving: false });
     }
   };
 
-  render({ game, userPlayer }: Props, { joining, leaving }: State) {
+  render(
+    { game, userPlayer }: Props,
+    { joining, leaving, confirmCancel, confirmLeave, error }: State,
+  ) {
     return [
       !userPlayer ? (
         game.state === GameState.Open && (
@@ -82,7 +138,12 @@ export default class ChangeParticipation extends Component<Props, State> {
           </form>
         )
       ) : userPlayer.isAdmin ? (
-        <form action="cancel" method="POST" onSubmit={this._onCancelSubmit}>
+        <form
+          ref={this._cancelForm}
+          action="cancel"
+          method="POST"
+          onSubmit={this._onCancelSubmit}
+        >
           <button class="button hero-button button-bad">Cancel game</button>
         </form>
       ) : (
@@ -92,6 +153,63 @@ export default class ChangeParticipation extends Component<Props, State> {
           </button>
         </form>
       ),
+      confirmCancel &&
+        createPortal(
+          <Modal
+            title="Cancel game?"
+            content={
+              <p>
+                All data about this game will be deleted and cannot be undone.
+              </p>
+            }
+            buttons={[
+              <button class="button" onClick={this._clearModals}>
+                Back
+              </button>,
+              <button
+                class="button button-bad"
+                onClick={this._modalCancelGameClick}
+              >
+                Cancel game
+              </button>,
+            ]}
+          />,
+          modals!,
+        ),
+      confirmLeave &&
+        createPortal(
+          <Modal
+            title="Leave game?"
+            content={
+              <p>
+                This means you will skip all your remaining turns. It cannot be
+                undone.
+              </p>
+            }
+            buttons={[
+              <button class="button" onClick={this._clearModals}>
+                Back
+              </button>,
+              <button class="button button-bad" onClick={this._leaveGame}>
+                Leave game
+              </button>,
+            ]}
+          />,
+          modals!,
+        ),
+      error &&
+        createPortal(
+          <Modal
+            title={error.title}
+            content={<p>{error.text}</p>}
+            buttons={[
+              <button class="button" onClick={this._clearError}>
+                Ok
+              </button>,
+            ]}
+          />,
+          modals!,
+        ),
     ];
   }
 }

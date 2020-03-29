@@ -79,6 +79,7 @@ const GamePage: FunctionalComponent<Props> = ({
           )}
         </div>
       </div>
+      <div class="modals"></div>
     </body>
   </html>
 );
