@@ -55,8 +55,18 @@ Check for unused exports.
 When dealing with thread.turn + thread.turnOffset, it needs to mod on players length, not thread length.
 
 Next step:
-  Set indexes on models. Look at all queries.
-  Am I sending too much info to the client? Eg userId
-  Error messages for failed actions.
+  Message to say you're waiting for others
+  iOS scroll broken after drawing
+    General iOS bugs?
+  Problem with context menu and cros pen
+  Order of games on the homepage.
+  Limit number of open games per player?
   Stop using `disabled` on form elements.
+  Error messages for failed actions.
+  Simple notifications.
+  A bit of messaging around uptime.
+  Delete old games.
+  Something better than prompt().
   Push notifications.
+  Drawing/describing icons on each status icon
+  Scroll up to top on turn mount
