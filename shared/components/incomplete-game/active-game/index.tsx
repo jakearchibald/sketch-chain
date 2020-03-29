@@ -48,19 +48,36 @@ export default class ActiveGame extends Component<Props, State> {
     this.setState({ removing: false });
   };
 
+  componentDidUpdate(previousProps: Props) {
+    // If we're displaying a new round, reset the scroll position
+    if (
+      this.props.lastTurnInThread?.id !== previousProps.lastTurnInThread?.id
+    ) {
+      window.scrollTo(0, 0);
+    }
+  }
+
   render(
     { userPlayer, game, inPlayThread, lastTurnInThread }: Props,
     { removing }: State,
   ) {
     return (
       <div>
-        {inPlayThread && (
+        {inPlayThread ? (
           <PlayerTurn
-            key={inPlayThread.id}
+            // Make sure the component changes for the new turn
+            key={lastTurnInThread ? lastTurnInThread.id : inPlayThread.id}
             players={game.players!}
             thread={inPlayThread}
             previousTurn={lastTurnInThread}
           />
+        ) : (
+          <div class="content-box content-sized">
+            <h2 class="content-box-title">Waiting</h2>
+            <div class="content-padding">
+              <p>Waiting on others to take their turn…</p>
+            </div>
+          </div>
         )}
         <div class="content-box content-sized">
           <h2 class="content-box-title">Game state</h2>
