@@ -12,6 +12,8 @@
  */
 import { h, Component, JSX } from 'preact';
 
+import isServer from 'consts:isServer';
+
 interface Props {
   buttons: JSX.Element[];
   title: string;
@@ -33,3 +35,7 @@ export default class Modal extends Component<Props, State> {
     );
   }
 }
+
+export const modalContainer = isServer
+  ? null
+  : document.querySelector('.modals');

@@ -14,8 +14,7 @@ import { h, Component, createRef } from 'preact';
 import { createPortal } from 'preact/compat';
 
 import { Game, Player, GameState } from 'shared/types';
-import isServer from 'consts:isServer';
-import Modal from 'shared/components/modal';
+import Modal, { modalContainer } from 'shared/components/modal';
 
 interface Props {
   game: Game;
@@ -30,8 +29,6 @@ interface State {
   confirmLeave: boolean;
   error?: { title: string; text: string };
 }
-
-const modals = isServer ? null : document.querySelector('.modals');
 
 export default class ChangeParticipation extends Component<Props, State> {
   state: State = {
@@ -48,17 +45,34 @@ export default class ChangeParticipation extends Component<Props, State> {
     if (!this.props.userPlayer) return;
     event.preventDefault();
     this.setState({ joining: true });
-    const response = await fetch('join?json=1', { method: 'POST' });
-    const data = await response.json();
 
-    if (data.redirectTo) {
-      location.href = data.redirectTo;
-      return;
+    try {
+      const response = await fetch('join?json=1', { method: 'POST' });
+      const data = await response.json();
+
+      if (data.redirectTo) {
+        location.href = data.redirectTo;
+        return;
+      }
+
+      if (data.error) {
+        this.setState({
+          error: {
+            title: 'Error',
+            text: data.error,
+          },
+        });
+      }
+    } catch (err) {
+      this.setState({
+        error: {
+          title: 'Connection error',
+          text: `Couldn't connect to the server. Please try again.`,
+        },
+      });
+    } finally {
+      this.setState({ joining: false });
     }
-
-    if (data.error) console.error(data.error);
-
-    this.setState({ joining: false });
   };
 
   private _onLeaveSubmit = async (event: Event) => {
@@ -83,16 +97,12 @@ export default class ChangeParticipation extends Component<Props, State> {
     this.setState({
       confirmCancel: false,
       confirmLeave: false,
-    });
-  };
-
-  private _clearError = () => {
-    this.setState({
       error: undefined,
     });
   };
 
   private _modalCancelGameClick = () => {
+    this._clearModals();
     this._cancelForm.current!.submit();
   };
 
@@ -110,7 +120,6 @@ export default class ChangeParticipation extends Component<Props, State> {
             text: data.error,
           },
         });
-        return;
       }
     } catch (err) {
       this.setState({
@@ -174,7 +183,7 @@ export default class ChangeParticipation extends Component<Props, State> {
               </button>,
             ]}
           />,
-          modals!,
+          modalContainer!,
         ),
       confirmLeave &&
         createPortal(
@@ -195,7 +204,7 @@ export default class ChangeParticipation extends Component<Props, State> {
               </button>,
             ]}
           />,
-          modals!,
+          modalContainer!,
         ),
       error &&
         createPortal(
@@ -203,12 +212,12 @@ export default class ChangeParticipation extends Component<Props, State> {
             title={error.title}
             content={<p>{error.text}</p>}
             buttons={[
-              <button class="button" onClick={this._clearError}>
+              <button class="button" onClick={this._clearModals}>
                 Ok
               </button>,
             ]}
           />,
-          modals!,
+          modalContainer!,
         ),
     ];
   }

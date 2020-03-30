@@ -25,6 +25,8 @@ import {
   drawPathData,
   clearCanvas,
 } from 'shared/drawing-canvas-utils';
+import { createPortal } from 'preact/compat';
+import Modal, { modalContainer } from 'shared/components/modal';
 
 /**
  * Returns new width and height.
@@ -95,6 +97,8 @@ interface State {
   drawingBegun: boolean;
   desktopMode: boolean;
   fallbackFullscreen: boolean;
+  confirmClear: boolean;
+  confirmSend: boolean;
 }
 
 export default class DrawingRound extends Component<Props, State> {
@@ -102,6 +106,8 @@ export default class DrawingRound extends Component<Props, State> {
     drawingBegun: false,
     fallbackFullscreen: false,
     desktopMode: !!mqList && mqList.matches,
+    confirmClear: false,
+    confirmSend: false,
   };
 
   private _canvas: HTMLCanvasElement | null = null;
@@ -132,9 +138,13 @@ export default class DrawingRound extends Component<Props, State> {
   };
 
   private _onClearClick = () => {
-    if (!confirm('Clear canvas?')) return;
+    this.setState({ confirmClear: true });
+  };
+
+  private _clearCanvas = () => {
     this._resetCanvas();
     this.setState({ drawingBegun: false });
+    this._clearModals();
   };
 
   private _onUndoClick = () => {
@@ -153,7 +163,11 @@ export default class DrawingRound extends Component<Props, State> {
   };
 
   private _onSendClick = () => {
-    if (!confirm('Send sketch?')) return;
+    this.setState({ confirmSend: true });
+  };
+
+  private _send = () => {
+    this._clearModals();
     const { width, height } = this._canvas!.getBoundingClientRect();
     const dataArray = new Uint16Array(this._drawingData!);
     // This mutates dataArray:
@@ -282,9 +296,22 @@ export default class DrawingRound extends Component<Props, State> {
     if (this.state.fallbackFullscreen) this._stopFallbackFullscreen();
   }
 
+  private _clearModals = () => {
+    this.setState({
+      confirmClear: false,
+      confirmSend: false,
+    });
+  };
+
   render(
     { previousPlayer, submitting, previousTurn }: Props,
-    { drawingBegun, desktopMode, fallbackFullscreen }: State,
+    {
+      drawingBegun,
+      desktopMode,
+      fallbackFullscreen,
+      confirmClear,
+      confirmSend,
+    }: State,
   ) {
     return (
       <div>
@@ -350,6 +377,38 @@ export default class DrawingRound extends Component<Props, State> {
             )}
           </div>
         </div>
+        {confirmClear &&
+          createPortal(
+            <Modal
+              title="Clear canvas?"
+              content={<p>This cannot be undone.</p>}
+              buttons={[
+                <button class="button" onClick={this._clearModals}>
+                  Back
+                </button>,
+                <button class="button button-bad" onClick={this._clearCanvas}>
+                  Clear
+                </button>,
+              ]}
+            />,
+            modalContainer!,
+          )}
+        {confirmSend &&
+          createPortal(
+            <Modal
+              title="Are you sure?"
+              content={<p>Do you want to send this to the next player?</p>}
+              buttons={[
+                <button class="button" onClick={this._clearModals}>
+                  No
+                </button>,
+                <button class="button button-bad" onClick={this._send}>
+                  Yes
+                </button>,
+              ]}
+            />,
+            modalContainer!,
+          )}
       </div>
     );
   }

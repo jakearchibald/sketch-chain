@@ -11,9 +11,12 @@
  * limitations under the License.
  */
 import { h, Component } from 'preact';
+import { createPortal } from 'preact/compat';
+
 import { Game, Player, Thread, Turn } from 'shared/types';
 import ChangeParticipation from '../change-participation';
 import PlayerTurn from './player-turn';
+import Modal, { modalContainer } from 'shared/components/modal';
 
 interface Props {
   userPlayer?: Player;
@@ -24,6 +27,8 @@ interface Props {
 
 interface State {
   removing: boolean;
+  pendingRemoveData?: URLSearchParams;
+  error?: { title: string; text: string };
 }
 
 export default class ActiveGame extends Component<Props, State> {
@@ -33,19 +38,47 @@ export default class ActiveGame extends Component<Props, State> {
 
   private _onRemoveSubmit = async (event: Event) => {
     event.preventDefault();
-
-    if (!confirm('Remove player from game?')) return;
-
-    this.setState({ removing: true });
     const form = event.target as HTMLFormElement;
     const formDataEntries = [...new FormData(form)] as Array<[string, string]>;
     const body = new URLSearchParams(formDataEntries);
-    const response = await fetch('leave?json=1', { method: 'POST', body });
-    const data = await response.json();
-    if (data.error) {
-      console.error(data.error);
+    this.setState({ pendingRemoveData: body });
+  };
+
+  private _removePlayer = async () => {
+    this.setState({ removing: true });
+    this._clearModals();
+
+    try {
+      const response = await fetch('leave?json=1', {
+        method: 'POST',
+        body: this.state.pendingRemoveData,
+      });
+      const data = await response.json();
+      if (data.error) {
+        this.setState({
+          error: {
+            title: 'Error',
+            text: data.error,
+          },
+        });
+      }
+    } catch (err) {
+      this.setState({
+        error: {
+          title: 'Connection error',
+          text: `Couldn't connect to the server. Please try again.`,
+        },
+      });
+    } finally {
+      this.setState({ removing: false });
     }
-    this.setState({ removing: false });
+  };
+
+  private _clearModals = () => {
+    this.setState({
+      error: undefined,
+      pendingRemoveData: undefined,
+    });
   };
 
   componentDidUpdate(previousProps: Props) {
@@ -59,7 +92,7 @@ export default class ActiveGame extends Component<Props, State> {
 
   render(
     { userPlayer, game, inPlayThread, lastTurnInThread }: Props,
-    { removing }: State,
+    { removing, pendingRemoveData: confirmRemove, error }: State,
   ) {
     return (
       <div>
@@ -151,6 +184,40 @@ export default class ActiveGame extends Component<Props, State> {
             warnOnLeave
           />
         </div>
+        {confirmRemove &&
+          createPortal(
+            <Modal
+              title="Remove player from game?"
+              content={
+                <p>
+                  This means they will automatically skip the rest of their
+                  turns. This cannot be undone.
+                </p>
+              }
+              buttons={[
+                <button class="button" onClick={this._clearModals}>
+                  Cancel
+                </button>,
+                <button class="button" onClick={this._removePlayer}>
+                  Remove player
+                </button>,
+              ]}
+            />,
+            modalContainer!,
+          )}
+        {error &&
+          createPortal(
+            <Modal
+              title={error.title}
+              content={<p>{error.text}</p>}
+              buttons={[
+                <button class="button" onClick={this._clearModals}>
+                  Ok
+                </button>,
+              ]}
+            />,
+            modalContainer!,
+          )}
       </div>
     );
   }

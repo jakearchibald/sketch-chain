@@ -15,6 +15,8 @@ import { Player, Thread, Turn, TurnType } from 'shared/types';
 import FirstRound from './first-round';
 import DrawingRound from './drawing-round';
 import DescribeRound from './describe-round';
+import { createPortal } from 'preact/compat';
+import Modal, { modalContainer } from 'shared/components/modal';
 
 interface Props {
   players: Player[];
@@ -24,6 +26,7 @@ interface Props {
 
 interface State {
   submitting: boolean;
+  error?: { title: string; text: string };
 }
 
 export default class PlayerTurn extends Component<Props, State> {
@@ -33,16 +36,43 @@ export default class PlayerTurn extends Component<Props, State> {
 
   private _onTurnSubmit = async (turnData: URLSearchParams) => {
     this.setState({ submitting: true });
-    const response = await fetch('play?json=1', {
-      method: 'POST',
-      body: turnData,
-    });
-    const data = await response.json();
-    if (data.error) console.error(data.error);
-    this.setState({ submitting: false });
+
+    try {
+      const response = await fetch('play?json=1', {
+        method: 'POST',
+        body: turnData,
+      });
+      const data = await response.json();
+      if (data.error) {
+        this.setState({
+          error: {
+            title: 'Error',
+            text: data.error,
+          },
+        });
+      }
+    } catch (err) {
+      this.setState({
+        error: {
+          title: 'Connection error',
+          text: `Couldn't connect to the server. Please try again.`,
+        },
+      });
+    } finally {
+      this.setState({ submitting: false });
+    }
   };
 
-  render({ players, previousTurn, thread }: Props, { submitting }: State) {
+  private _clearError = () => {
+    this.setState({
+      error: undefined,
+    });
+  };
+
+  render(
+    { players, previousTurn, thread }: Props,
+    { submitting, error }: State,
+  ) {
     const previousPlayer: Player | undefined = previousTurn
       ? players.find((player) => player.id === previousTurn.playerId)
       : undefined;
@@ -83,6 +113,19 @@ export default class PlayerTurn extends Component<Props, State> {
             submitting={submitting}
           />
         )}
+        {error &&
+          createPortal(
+            <Modal
+              title={error.title}
+              content={<p>{error.text}</p>}
+              buttons={[
+                <button class="button" onClick={this._clearError}>
+                  Ok
+                </button>,
+              ]}
+            />,
+            modalContainer!,
+          )}
       </div>
     );
   }
