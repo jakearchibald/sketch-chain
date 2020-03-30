@@ -25,8 +25,7 @@ import {
   drawPathData,
   clearCanvas,
 } from 'shared/drawing-canvas-utils';
-import { createPortal } from 'preact/compat';
-import Modal, { modalContainer } from 'shared/components/modal';
+import Modal from 'shared/components/modal';
 
 /**
  * Returns new width and height.
@@ -376,9 +375,7 @@ export default class DrawingRound extends Component<Props, State> {
               </div>
             )}
           </div>
-        </div>
-        {confirmClear &&
-          createPortal(
+          {confirmClear && (
             <Modal
               title="Clear canvas?"
               content={<p>This cannot be undone.</p>}
@@ -390,11 +387,9 @@ export default class DrawingRound extends Component<Props, State> {
                   Clear
                 </button>,
               ]}
-            />,
-            modalContainer!,
+            />
           )}
-        {confirmSend &&
-          createPortal(
+          {confirmSend && (
             <Modal
               title="Are you sure?"
               content={<p>Do you want to send this to the next player?</p>}
@@ -406,9 +401,9 @@ export default class DrawingRound extends Component<Props, State> {
                   Yes
                 </button>,
               ]}
-            />,
-            modalContainer!,
+            />
           )}
+        </div>
       </div>
     );
   }
