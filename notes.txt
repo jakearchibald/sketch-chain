@@ -55,10 +55,7 @@ Check for unused exports.
 When dealing with thread.turn + thread.turnOffset, it needs to mod on players length, not thread length.
 
 Next step:
-  Finish off this using modals:
-    Error messages for failed actions.
-    Something better than prompt().
-  Problem with context menu and cros pen
+  Add analytics
   Simple notifications.
   A bit of messaging around uptime.
   Delete old games.

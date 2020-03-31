@@ -84,6 +84,8 @@ const mqList =
     ? window.matchMedia('(min-width: 500px)')
     : undefined;
 
+const preventDefault = (e: Event) => e.preventDefault();
+
 interface Props {
   previousPlayer: Player;
   submitting: boolean;
@@ -347,7 +349,11 @@ export default class DrawingRound extends Component<Props, State> {
             <div class="thing-to-draw">"{previousTurn.data!}"</div>
             <div class="canvas-container">
               <IframeOnResize onResize={this._iframeWindowResize} />
-              <canvas class="drawing-canvas" ref={this._canvasMount} />
+              <canvas
+                class="drawing-canvas"
+                ref={this._canvasMount}
+                onContextMenu={preventDefault}
+              />
             </div>
             {!isServer && (
               <div class="drawing-controls">
