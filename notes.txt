@@ -56,7 +56,16 @@ When dealing with thread.turn + thread.turnOffset, it needs to mod on players le
 
 Next step:
   Add analytics
+  Solve circular dependency
   Simple notifications.
+    Add listener in notification-state.ts
+    Incomplete game handles the actual notifications.
+    Add an extra bit in clientside code to notify when game is complete.
+    Notification button appears beneath "waiting" screen, and next to leave when a game is joined.
+    You get a notification if the window isn't focused, and:
+      New game thread appears
+      Game completes
+  Add pointerrawupdate support.
   A bit of messaging around uptime.
   Delete old games.
   Push notifications.

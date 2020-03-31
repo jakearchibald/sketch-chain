@@ -239,6 +239,7 @@ export default class DrawingRound extends Component<Props, State> {
     const activePointers = new Map<number, { x: number; y: number }[]>();
 
     this._pointerTracker = new PointerTracker(canvas, {
+      rawUpdates: true,
       start: (pointer, event) => {
         event.preventDefault();
         if (!this.state.drawingBegun) {
@@ -286,7 +287,7 @@ export default class DrawingRound extends Component<Props, State> {
       },
     });
 
-    this._context = canvas.getContext('2d')!;
+    this._context = canvas.getContext('2d', { desynchronized: true })!;
     this._resetCanvas();
   }
 
