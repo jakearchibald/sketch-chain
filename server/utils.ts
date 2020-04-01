@@ -18,7 +18,9 @@ import WebSocket, { Server as WebSocketServer } from 'ws';
 import { RequestHandler, Response } from 'express';
 
 import { origin } from './config';
-import { NotFoundError, ForbiddenError } from './data';
+
+export class NotFoundError extends Error {}
+export class ForbiddenError extends Error {}
 
 export function abortHandshake(
   socket: Socket,

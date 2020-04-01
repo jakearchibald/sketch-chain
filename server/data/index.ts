@@ -14,7 +14,11 @@ import { EventEmitter } from 'events';
 import { Buffer } from 'buffer';
 
 import { Game, Player, Thread, Turn } from 'server/data/models';
-import { createProbablyUniqueName } from 'server/utils';
+import {
+  createProbablyUniqueName,
+  ForbiddenError,
+  NotFoundError,
+} from 'server/utils';
 import {
   GameState,
   Player as SharedPlayer,
@@ -43,9 +47,6 @@ interface DataEmitter extends EventEmitter {
 }
 
 export const emitter: DataEmitter = new EventEmitter();
-
-export class NotFoundError extends Error {}
-export class ForbiddenError extends Error {}
 
 function gameChanged(gameId: string) {
   emitter.emit('gamechange', gameId);
