@@ -29,8 +29,13 @@ export default class CompleteDrawing extends Component<Props, State> {
   private _context?: CanvasRenderingContext2D;
   private _cachedPathBase64?: string;
   private _cachedPathData?: Uint16Array;
+  private _previousIframeWidth: number = 0;
 
-  private _iframeWindowResize = () => {
+  private _iframeWindowResize = (width: number) => {
+    // Because the values are fractional, it can thrash sometimes.
+    // Limiting the check to the width should prevent that.
+    if (width === this._previousIframeWidth) return;
+    this._previousIframeWidth = width;
     this._redrawCanvas();
   };
 
