@@ -10,8 +10,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { base64ToBuffer } from 'shared/base64';
-import { resetCanvas, drawPathData } from 'shared/drawing-canvas-utils';
+import { base64ToBuffer } from 'shared/utils/base64';
+import { resetCanvas, drawPathData } from 'shared/utils/drawing-canvas';
 
 const containers = document.querySelectorAll(
   '.final-drawing-canvas-container',
