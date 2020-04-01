@@ -12,8 +12,8 @@
  */
 import { h, Component } from 'preact';
 import IframeOnResize from '../iframe-on-resize';
-import { resetCanvas, drawPathData } from 'shared/drawing-canvas-utils';
-import { base64ToBuffer } from 'shared/base64';
+import { resetCanvas, drawPathData } from 'shared/utils/drawing-canvas';
+import { base64ToBuffer } from 'shared/utils/base64';
 import isServer from 'consts:isServer';
 
 interface Props {

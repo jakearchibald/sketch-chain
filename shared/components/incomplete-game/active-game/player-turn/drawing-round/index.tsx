@@ -16,7 +16,7 @@ import simplify from 'simplify-js';
 
 import { Player, Turn, Thread } from 'shared/types';
 import isServer from 'consts:isServer';
-import { bufferToBase64 } from 'shared/base64';
+import { bufferToBase64 } from 'shared/utils/base64';
 import { penUp, maxDrawingVal } from 'shared/config';
 import IframeOnResize from 'shared/components/iframe-on-resize';
 import {
@@ -24,7 +24,7 @@ import {
   drawPoint,
   drawPathData,
   clearCanvas,
-} from 'shared/drawing-canvas-utils';
+} from 'shared/utils/drawing-canvas';
 import Modal from 'shared/components/modal';
 
 /**
