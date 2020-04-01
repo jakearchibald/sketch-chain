@@ -26,6 +26,7 @@ import {
   clearCanvas,
 } from 'shared/utils/drawing-canvas';
 import Modal from 'shared/components/modal';
+import { isMac } from 'shared/utils/platform';
 
 /**
  * Returns new width and height.
@@ -148,7 +149,7 @@ export default class DrawingRound extends Component<Props, State> {
     this._clearModals();
   };
 
-  private _onUndoClick = () => {
+  private _undo = () => {
     const lastLineEndIndex = this._drawingData!.lastIndexOf(penUp);
     if (lastLineEndIndex <= 0) {
       this._resetCanvas();
@@ -161,6 +162,13 @@ export default class DrawingRound extends Component<Props, State> {
 
     const { width, height } = this._canvas!.getBoundingClientRect();
     drawPathData(width, height, this._drawingData!, this._context!);
+  };
+
+  private _onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'z' && event[isMac ? 'metaKey' : 'ctrlKey']) {
+      event.preventDefault();
+      this._undo();
+    }
   };
 
   private _onSendClick = () => {
@@ -228,6 +236,7 @@ export default class DrawingRound extends Component<Props, State> {
 
   componentDidMount() {
     mqList!.addListener(this._onMqChange);
+    window.addEventListener('keydown', this._onKeyDown);
 
     const canvas = this._canvas;
 
@@ -293,6 +302,7 @@ export default class DrawingRound extends Component<Props, State> {
 
   componentWillUnmount() {
     mqList!.removeListener(this._onMqChange);
+    window.removeEventListener('keydown', this._onKeyDown);
     this._pointerTracker!.stop();
 
     if (this.state.fallbackFullscreen) this._stopFallbackFullscreen();
@@ -367,7 +377,7 @@ export default class DrawingRound extends Component<Props, State> {
                 </button>
                 <button
                   class="button"
-                  onClick={this._onUndoClick}
+                  onClick={this._undo}
                   disabled={!drawingBegun}
                 >
                   Undo
