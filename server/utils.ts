@@ -87,8 +87,9 @@ export function randomItem<T>(array: T[]): T {
   return array[randomInt(array.length)];
 }
 
+const group = [...teams, ...collections];
+
 export const createProbablyUniqueName = (() => {
-  const group = [...teams, ...collections];
   return () =>
     `${randomItem(predicates)}-${randomItem(objects)}-${randomItem(group)}`;
 })();
