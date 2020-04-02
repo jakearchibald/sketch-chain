@@ -161,10 +161,16 @@ body {
   box-shadow: 7px 7px #000;
   border-width: 5px;
   background: #78ff78;
+  --icon-size: 48px;
 }
 
 .button-bad {
   background: #ff7878;
+}
+
+.button-with-icon {
+  padding: 0.2em 0.7em;
+  padding-left: 0.4em;
 }
 
 .game-list {
@@ -413,4 +419,16 @@ body {
   padding: 0 2.4rem;
   display: flex;
   align-items: center;
+}
+
+.icon-text {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  grid-gap: 0.7rem;
+  align-items: center;
+
+  & > .icon {
+    width: var(--icon-size);
+    height: auto;
+  }
 }

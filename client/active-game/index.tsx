@@ -14,7 +14,7 @@ import { h, render, Component } from 'preact';
 
 import WS from 'client/ws';
 import IncompleteGame from 'shared/components/incomplete-game';
-import { Game, Player, GameState, GamePageData } from 'shared/types';
+import { GameState, GamePageData } from 'shared/types';
 
 const loginInfo = document.querySelector('.login-info');
 const userId = loginInfo

@@ -17,6 +17,8 @@ import { Game, Player, Thread, Turn } from 'shared/types';
 import ChangeParticipation from '../change-participation';
 import PlayerTurn from './player-turn';
 import Modal, { modalContainer } from 'shared/components/modal';
+import NotificationToggle from '../notification-toggle';
+import { getIsEnabled as getNotificationEnabled } from 'shared/utils/notificaiton-state';
 
 interface Props {
   userPlayer?: Player;
@@ -35,6 +37,8 @@ export default class ActiveGame extends Component<Props, State> {
   state: State = {
     removing: false,
   };
+
+  private _activeNotificaiton?: Notification;
 
   private _onRemoveSubmit = async (event: Event) => {
     event.preventDefault();
@@ -81,7 +85,37 @@ export default class ActiveGame extends Component<Props, State> {
     });
   };
 
+  private _handleNotifications(previousProps?: Props) {
+    if (!this.props.inPlayThread) {
+      this._activeNotificaiton?.close();
+      return;
+    }
+    if (document.hasFocus() || !getNotificationEnabled()) return;
+    if (previousProps && previousProps.inPlayThread) return;
+
+    const notification = new Notification('Sketch Chain', {
+      body: `It's your turn in game ${this.props.game.id}`,
+      tag: this.props.game.id,
+    });
+
+    this._activeNotificaiton = notification;
+
+    this._activeNotificaiton.addEventListener('click', () => {
+      window.focus();
+      notification.close();
+    });
+  }
+
+  componentDidMount() {
+    this._handleNotifications();
+  }
+
+  componentWillUnmount() {
+    this._activeNotificaiton?.close();
+  }
+
   componentDidUpdate(previousProps: Props) {
+    this._handleNotifications(previousProps);
     // If we're displaying a new round, reset the scroll position
     if (
       this.props.lastTurnInThread?.id !== previousProps.lastTurnInThread?.id
@@ -105,12 +139,17 @@ export default class ActiveGame extends Component<Props, State> {
             previousTurn={lastTurnInThread}
           />
         ) : (
-          <div class="content-box content-sized">
-            <h2 class="content-box-title">Waiting</h2>
-            <div class="content-padding">
-              <p>Waiting on others to take their turn…</p>
-            </div>
-          </div>
+          [
+            <div class="content-box content-sized">
+              <h2 class="content-box-title">Waiting</h2>
+              <div class="content-padding">
+                <p>Waiting on others to take their turn…</p>
+              </div>
+            </div>,
+            <div class="hero-button-container">
+              <NotificationToggle />
+            </div>,
+          ]
         )}
         <div class="content-box content-sized">
           <h2 class="content-box-title">Game state</h2>
@@ -183,6 +222,7 @@ export default class ActiveGame extends Component<Props, State> {
             game={game}
             warnOnLeave
           />
+          <NotificationToggle />
         </div>
         {confirmRemove &&
           createPortal(

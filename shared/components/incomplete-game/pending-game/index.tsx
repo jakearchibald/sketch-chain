@@ -15,6 +15,7 @@ import { Game, Player } from 'shared/types';
 import { minPlayers } from 'shared/config';
 import ChangeParticipation from '../change-participation';
 import WhatIsThis from 'shared/components/what-is-this';
+import NotificationToggle from '../notification-toggle';
 
 interface Props {
   userPlayer?: Player;
@@ -65,6 +66,7 @@ export default class PendingGame extends Component<Props, State> {
               </button>
             </form>
           )}
+          {userPlayer && <NotificationToggle />}
         </div>
         <div class="content-box content-sized">
           <h2 class="content-box-title">Players</h2>

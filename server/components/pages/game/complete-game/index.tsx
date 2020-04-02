@@ -20,7 +20,7 @@ interface Props {
 }
 
 const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
-  <div>
+  <div class="complete-game" data-game-id={game.id}>
     {game.threads!.map((thread) => {
       const firstTurn = thread.turns!.find(
         (turn) => turn.type === TurnType.Describe,

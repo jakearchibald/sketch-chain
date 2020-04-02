@@ -12,10 +12,12 @@
  */
 import { base64ToBuffer } from 'shared/utils/base64';
 import { resetCanvas, drawPathData } from 'shared/utils/drawing-canvas';
+import { getIsEnabled as getNotificationEnabled } from 'shared/utils/notificaiton-state';
 
 const containers = document.querySelectorAll(
   '.final-drawing-canvas-container',
 ) as NodeListOf<HTMLCanvasElement>;
+const completeGame = document.querySelector('.complete-game') as HTMLElement;
 
 for (const container of containers) {
   const canvas = container.querySelector('canvas') as HTMLCanvasElement;
@@ -25,4 +27,18 @@ for (const container of containers) {
   const ctx = canvas.getContext('2d')!;
   resetCanvas(ctx, width, height);
   drawPathData(width, height, points, ctx);
+}
+
+if (!document.hasFocus() && getNotificationEnabled()) {
+  const gameId = completeGame.dataset.gameId;
+
+  const notification = new Notification('Sketch Chain', {
+    body: `Game complete! See the results for ${gameId}`,
+    tag: gameId,
+  });
+
+  notification.addEventListener('click', () => {
+    window.focus();
+    notification.close();
+  });
 }
