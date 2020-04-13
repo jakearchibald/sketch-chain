@@ -91,10 +91,16 @@ export function randomItem<T>(array: T[]): T {
 
 const group = [...teams, ...collections];
 
-export const createProbablyUniqueName = (() => {
+export function createProbablyUniqueName() {
   return () =>
-    `${randomItem(predicates)}-${randomItem(objects)}-${randomItem(group)}`;
-})();
+    [
+      randomItem(predicates),
+      randomItem(objects),
+      randomItem(group),
+      randomItem(predicates),
+      randomItem(group),
+    ].join('-');
+}
 
 export function sendErrorResponse(
   res: Response,
