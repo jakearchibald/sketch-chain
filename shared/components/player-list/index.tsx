@@ -80,7 +80,7 @@ export default class PlayerList extends Component<Props, State> {
 
   render(
     { userPlayer, game }: Props,
-    { removing, pendingRemoveData: confirmRemove, error }: State,
+    { removing, pendingRemoveData, error }: State,
   ) {
     return (
       <Fragment>
@@ -164,7 +164,7 @@ export default class PlayerList extends Component<Props, State> {
             </ol>
           </div>
         </div>
-        {confirmRemove &&
+        {pendingRemoveData &&
           createPortal(
             <Modal
               title="Remove player from game?"
