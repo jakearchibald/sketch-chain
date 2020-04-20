@@ -168,6 +168,10 @@ body {
   background: #ff7878;
 }
 
+.button-good {
+  background: #78ff78;
+}
+
 .button-with-icon {
   padding: 0.2em 0.7em;
   padding-left: 0.4em;
@@ -430,5 +434,18 @@ body {
   & > .icon {
     width: var(--icon-size);
     height: auto;
+  }
+}
+
+.user-appearance {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: stretch;
+  grid-gap: 0.5rem;
+
+  & .avatar,
+  & .placeholder-avatar {
+    width: 51px;
+    height: 51px;
   }
 }

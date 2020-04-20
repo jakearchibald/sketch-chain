@@ -35,7 +35,6 @@ declare module 'friendly-words' {
 declare namespace Express {
   interface Session extends SessionData {
     user?: UserSession;
-    allowGetCreateGame?: boolean;
     allowGetJoinGame?: boolean;
   }
 }

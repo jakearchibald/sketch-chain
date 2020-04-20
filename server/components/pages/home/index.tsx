@@ -11,12 +11,15 @@
  * limitations under the License.
  */
 import { h, FunctionalComponent } from 'preact';
+
 import cssURL from 'css:../styles.css';
 import LoginState from 'server/components/login-state';
 import GameList from 'server/components/game-list';
 import WhatIsThis from 'shared/components/what-is-this';
+import CreateGame from 'shared/components/create-game';
 import { siteTitle } from 'shared/config';
 import { Game } from 'shared/types';
+import bundleURL, { imports } from 'client-bundle:client/home';
 
 interface Props {
   user?: UserSession;
@@ -31,6 +34,8 @@ const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         {/* TODO: favicon */}
         <link rel="stylesheet" href={cssURL} />
+        <script type="module" src={bundleURL} />
+        {...imports.map((i) => <link rel="modulepreload" href={i} />)}
       </head>
       <body>
         <LoginState user={user} />
@@ -40,13 +45,15 @@ const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
               <h1 class="site-title">{siteTitle}</h1>
             </div>
           </div>
-          <form
-            method="POST"
-            action="/create-game"
-            class="hero-button-container"
-          >
-            <button class="button hero-button">Create game</button>
-          </form>
+          <div class="create-game-container hero-button-container">
+            <CreateGame
+              userDetails={
+                // Create a new object to avoid extra server info leaking into the client
+                user ? { name: user.name, picture: user.picture } : undefined
+              }
+              hideAvatar={false}
+            />
+          </div>
           {user && userGames && userGames.length ? (
             <div class="content-box">
               <h2 class="content-box-title">Your games</h2>
@@ -57,6 +64,7 @@ const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
           ) : undefined}
           <WhatIsThis />
         </div>
+        <div class="modals"></div>
       </body>
     </html>
   );

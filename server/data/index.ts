@@ -18,6 +18,7 @@ import {
   createProbablyUniqueName,
   ForbiddenError,
   NotFoundError,
+  BadRequestError,
 } from 'server/utils';
 import {
   GameState,
@@ -56,13 +57,23 @@ function gameChanged(gameId: string) {
  * @param user Current user.
  * @returns ID of the new game.
  */
-export async function createGame(user: UserSession): Promise<string> {
+export async function createGame(
+  user: UserSession,
+  playerName: string,
+  hideAvatar: boolean,
+): Promise<string> {
   const openGames = await countUncompleteGamesOwnedByUser(user.id);
 
   if (openGames > maxOpenGamesPerUser) {
     throw new ForbiddenError(
       `Too many open games. Please finish some of your other games, or cancel them.`,
     );
+  }
+
+  const sanitisedPlayerName = playerName.trim().slice(0, 35);
+
+  if (!sanitisedPlayerName) {
+    throw new BadRequestError('Player name cannot be empty');
   }
 
   while (true) {
@@ -75,8 +86,8 @@ export async function createGame(user: UserSession): Promise<string> {
 
     await game.createPlayer({
       userId: user.id,
-      name: user.name,
-      avatar: user.picture,
+      name: sanitisedPlayerName,
+      avatar: hideAvatar ? undefined : user.picture,
       isAdmin: true,
     });
 
@@ -411,7 +422,7 @@ function sanitizeDrawingData(json: string): string {
   try {
     imageData = JSON.parse(json);
   } catch (err) {
-    throw Error('Invalid JSON');
+    throw new BadRequestError('Invalid JSON');
   }
 
   const width = Math.round(Number(imageData.width));

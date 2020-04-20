@@ -34,7 +34,11 @@ const LoginState: FunctionalComponent<Props> = ({ user }) => {
                   data-user-id={user.id}
                 />
               )}
-              <div class="login-info" data-user-id={user.id}>
+              <div
+                class="login-info"
+                data-user-id={user.id}
+                data-user-avatar={user.picture || ''}
+              >
                 {user.name}
               </div>
             </div>,

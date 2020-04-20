@@ -55,8 +55,30 @@ When dealing with thread.turn + thread.turnOffset, it needs to mod on players le
 Back up current drawing into localstorage? Means it's not lost on refresh.
 
 Next step:
+  From privacy team:
+    Make it clear how a user will appear in the game.
+      Let them pick a different name.
+      Let them disable the avatar.
+      Cache these in localstorage for future games.
+    Admin can delete completed games.
+    When player leaves a game:
+      If complete:
+        Disassociate all previous turns (just make them anonymous)
+      If in progress:
+        Offer option to disassociate
+    Avoid sending user id to client. Use player id instead.
+  Landscape mobile
+  Client notifications should only appear on desktop.
+    And there's something funky going on with how it appears and disappears.
+  Game state should identify admin
+  Reconnect websocket on page show?
+  Don't wrap text on complete page
+  Joining a game is doing a page reload, I think
   Add analytics
   A bit of messaging around uptime.
   Delete old games.
   Push notifications.
   Drawing/describing icons on each status icon
+  Bug on Android 9?
+  Better path smoothing? PaperJS?
+  Favicon
