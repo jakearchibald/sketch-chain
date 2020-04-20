@@ -102,6 +102,10 @@ export function createProbablyUniqueName() {
   ].join('-');
 }
 
+export function createFakeLoginName() {
+  return [randomItem(predicates), randomItem(objects)].join('-');
+}
+
 export function sendErrorResponse(
   res: Response,
   error: Error,

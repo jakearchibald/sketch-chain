@@ -21,7 +21,7 @@ import {
   devMode,
   admins,
 } from 'server/config';
-import { createProbablyUniqueName, requireSameOrigin } from 'server/utils';
+import { requireSameOrigin, createFakeLoginName } from 'server/utils';
 
 const createClient = () =>
   new OAuth2Client({
@@ -74,7 +74,7 @@ router.all('/test-login', (req, res) => {
     return;
   }
 
-  const id = req.query.id || createProbablyUniqueName();
+  const id = req.query.id || createFakeLoginName();
 
   req.session!.user = {
     email: 'foo@bar.com',
