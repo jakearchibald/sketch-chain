@@ -27,6 +27,7 @@ interface Props {
 interface State {
   showCreateDialog: boolean;
   hideAvatar: boolean;
+  playerName: string;
 }
 
 export const preferredNameKey = 'preferredName';
@@ -36,6 +37,7 @@ export default class CreateGame extends Component<Props, State> {
   state: State = {
     showCreateDialog: false,
     hideAvatar: this.props.hideAvatar,
+    playerName: this.props.userDetails ? this.props.userDetails.name : '',
   };
 
   private _onLoginSubmit = () => {
@@ -50,10 +52,22 @@ export default class CreateGame extends Component<Props, State> {
     this.setState({ showCreateDialog: false });
   };
 
-  private _hideAvatarChange = () => {
+  private _onCreateFormSubmit = (event: Event) => {
+    const data = new FormData(event.target as HTMLFormElement);
+    localStorage.setItem(preferredNameKey, data.get('player-name') as string);
+    localStorage.setItem(hideAvatarKey, data.get('hide-avatar') as string);
+  };
+
+  private _onHideAvatarChange = () => {
     this.setState((state) => ({
       hideAvatar: !state.hideAvatar,
     }));
+  };
+
+  private _onNameInput = (event: Event) => {
+    this.setState({
+      playerName: (event.target as HTMLInputElement).value,
+    });
   };
 
   componentDidMount() {
@@ -65,7 +79,10 @@ export default class CreateGame extends Component<Props, State> {
     this.setState({ showCreateDialog: true });
   }
 
-  render({ userDetails }: Props, { showCreateDialog, hideAvatar }: State) {
+  render(
+    { userDetails }: Props,
+    { showCreateDialog, hideAvatar, playerName }: State,
+  ) {
     if (!userDetails) {
       return (
         <form
@@ -90,7 +107,11 @@ export default class CreateGame extends Component<Props, State> {
         </button>
         {showCreateDialog &&
           createPortal(
-            <form method="POST" action="/create-game">
+            <form
+              method="POST"
+              action="/create-game"
+              onSubmit={this._onCreateFormSubmit}
+            >
               <Modal
                 title="Options"
                 content={
@@ -118,7 +139,8 @@ export default class CreateGame extends Component<Props, State> {
                       <input
                         type="text"
                         class="large-text-input"
-                        value={userDetails.name}
+                        value={playerName}
+                        onInput={this._onNameInput}
                         name="player-name"
                         required
                       />
@@ -131,7 +153,7 @@ export default class CreateGame extends Component<Props, State> {
                             checked={hideAvatar}
                             name="hide-avatar"
                             value="1"
-                            onInput={this._hideAvatarChange}
+                            onInput={this._onHideAvatarChange}
                           />{' '}
                           Hide avatar
                         </label>
