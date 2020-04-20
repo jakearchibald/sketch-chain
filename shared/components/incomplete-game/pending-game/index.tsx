@@ -16,6 +16,7 @@ import { minPlayers } from 'shared/config';
 import ChangeParticipation from '../change-participation';
 import WhatIsThis from 'shared/components/what-is-this';
 import NotificationToggle from '../notification-toggle';
+import PlayerList from 'shared/components/player-list';
 
 interface Props {
   userPlayer?: Player;
@@ -68,30 +69,7 @@ export default class PendingGame extends Component<Props, State> {
           )}
           {userPlayer && <NotificationToggle />}
         </div>
-        <div class="content-box content-sized">
-          <h2 class="content-box-title">Players</h2>
-          <div class="content-padding">
-            <ul class="player-list">
-              {game.players!.map((player) => (
-                <li key={player.userId}>
-                  {player.avatar && (
-                    <img
-                      width="40"
-                      height="40"
-                      alt=""
-                      class="avatar"
-                      src={`${player.avatar}=s${40}-c`}
-                      srcset={`${player.avatar}=s${80}-c 2x`}
-                    />
-                  )}
-                  <div class="name">
-                    {player.name} {player.isAdmin && '(admin)'}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <PlayerList game={game} userPlayer={userPlayer} />
       </div>
     );
   }
