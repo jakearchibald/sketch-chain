@@ -92,14 +92,13 @@ export function randomItem<T>(array: T[]): T {
 const group = [...teams, ...collections];
 
 export function createProbablyUniqueName() {
-  return () =>
-    [
-      randomItem(predicates),
-      randomItem(objects),
-      randomItem(group),
-      randomItem(predicates),
-      randomItem(group),
-    ].join('-');
+  return [
+    randomItem(predicates),
+    randomItem(objects),
+    randomItem(group),
+    randomItem(predicates),
+    randomItem(group),
+  ].join('-');
 }
 
 export function sendErrorResponse(
