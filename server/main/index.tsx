@@ -12,7 +12,7 @@
  */
 import { join as joinPath } from 'path';
 
-import { Router, Request, Response, urlencoded } from 'express';
+import { Router, urlencoded } from 'express';
 import { h } from 'preact';
 import expressAsyncHandler from 'express-async-handler';
 
@@ -20,7 +20,7 @@ import { renderPage } from 'server/render';
 import { requireSameOrigin, sendErrorResponse } from 'server/utils';
 import HomePage from 'server/components/pages/home';
 import { createGame, getUsersGames } from 'server/data';
-import { getLoginRedirectURL, requireAdmin, requireLogin } from 'server/auth';
+import { requireAdmin, requireLogin } from 'server/auth';
 
 export const router: Router = Router({
   strict: true,

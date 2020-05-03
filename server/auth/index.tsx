@@ -56,7 +56,7 @@ export function requireAdmin(): RequestHandler {
   };
 }
 
-export function getLoginRedirectURL(redirectBackTo: string) {
+function getLoginRedirectURL(redirectBackTo: string) {
   const oauth2Client = createClient();
   return oauth2Client.generateAuthUrl({
     scope: ['openid', 'email', 'profile'],

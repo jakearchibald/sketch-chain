@@ -11,7 +11,13 @@
  * limitations under the License.
  */
 import { h, FunctionalComponent } from 'preact';
-import { Game as GameType, GameState, Thread, Turn } from 'shared/types';
+import {
+  Game as GameType,
+  GameState,
+  Thread,
+  Turn,
+  UserPrefs,
+} from 'shared/types';
 import PendingGame from './pending-game';
 import ActiveGame from './active-game';
 
@@ -20,6 +26,7 @@ interface Props {
   game: GameType;
   inPlayThread: Thread | null;
   lastTurnInThread: Turn | null;
+  userPrefs?: UserPrefs;
 }
 
 const IncompleteGame: FunctionalComponent<Props> = ({
@@ -27,6 +34,7 @@ const IncompleteGame: FunctionalComponent<Props> = ({
   game,
   inPlayThread,
   lastTurnInThread,
+  userPrefs,
 }) => {
   const userPlayer = userId
     ? game.players!.find(
@@ -37,9 +45,14 @@ const IncompleteGame: FunctionalComponent<Props> = ({
   return (
     <div>
       {game.state === GameState.Open ? (
-        <PendingGame userPlayer={userPlayer} game={game} />
+        <PendingGame
+          userPlayer={userPlayer}
+          game={game}
+          userPrefs={userPrefs}
+        />
       ) : (
         <ActiveGame
+          userPrefs={userPrefs}
           userPlayer={userPlayer}
           game={game}
           inPlayThread={inPlayThread}

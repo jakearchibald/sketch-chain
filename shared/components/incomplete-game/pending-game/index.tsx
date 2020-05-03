@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 import { h, Component } from 'preact';
-import { Game, Player } from 'shared/types';
+import { Game, Player, UserPrefs } from 'shared/types';
 import { minPlayers } from 'shared/config';
 import ChangeParticipation from '../change-participation';
 import WhatIsThis from 'shared/components/what-is-this';
@@ -19,6 +19,7 @@ import NotificationToggle from '../notification-toggle';
 import PlayerList from 'shared/components/player-list';
 
 interface Props {
+  userPrefs?: UserPrefs;
   userPlayer?: Player;
   game: Game;
 }
@@ -41,7 +42,7 @@ export default class PendingGame extends Component<Props, State> {
     this.setState({ starting: false });
   };
 
-  render({ game, userPlayer }: Props, { starting }: State) {
+  render({ game, userPlayer, userPrefs }: Props, { starting }: State) {
     return (
       <div>
         {userPlayer?.isAdmin ? (
@@ -59,7 +60,11 @@ export default class PendingGame extends Component<Props, State> {
           <WhatIsThis />
         )}
         <div class="hero-button-container">
-          <ChangeParticipation game={game} userPlayer={userPlayer} />
+          <ChangeParticipation
+            game={game}
+            userPlayer={userPlayer}
+            userPrefs={userPrefs}
+          />
           {userPlayer?.isAdmin && game.players!.length >= minPlayers && (
             <form action="start" method="POST" onSubmit={this._onStartSubmit}>
               <button class="button hero-button" disabled={starting}>

@@ -12,7 +12,7 @@
  */
 import { h, Component } from 'preact';
 
-import { Game, Player, Thread, Turn } from 'shared/types';
+import { Game, Player, Thread, Turn, UserPrefs } from 'shared/types';
 import ChangeParticipation from '../change-participation';
 import PlayerTurn from './player-turn';
 import NotificationToggle from '../notification-toggle';
@@ -24,6 +24,7 @@ interface Props {
   game: Game;
   inPlayThread: Thread | null;
   lastTurnInThread: Turn | null;
+  userPrefs?: UserPrefs;
 }
 
 interface State {}
@@ -70,7 +71,13 @@ export default class ActiveGame extends Component<Props, State> {
     }
   }
 
-  render({ userPlayer, game, inPlayThread, lastTurnInThread }: Props) {
+  render({
+    userPlayer,
+    game,
+    inPlayThread,
+    lastTurnInThread,
+    userPrefs,
+  }: Props) {
     return (
       <div>
         {inPlayThread ? (
@@ -99,6 +106,7 @@ export default class ActiveGame extends Component<Props, State> {
           <ChangeParticipation
             userPlayer={userPlayer}
             game={game}
+            userPrefs={userPrefs}
             warnOnLeave
           />
           <NotificationToggle />

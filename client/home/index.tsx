@@ -11,27 +11,8 @@
  * limitations under the License.
  */
 import { h, render } from 'preact';
-
-import CreateGame, {
-  preferredNameKey,
-  hideAvatarKey,
-} from 'shared/components/create-game';
-
-const loginInfo = document.querySelector('.login-info') as HTMLElement | null;
+import { getUserPrefs } from 'shared/utils/user-prefs';
+import CreateGame from 'shared/components/create-game';
 const container = document.querySelector('.create-game-container')!;
 
-render(
-  <CreateGame
-    userDetails={
-      loginInfo
-        ? {
-            name:
-              localStorage.getItem(preferredNameKey) || loginInfo.textContent!,
-            picture: loginInfo.dataset.userAvatar,
-          }
-        : undefined
-    }
-    hideAvatar={!!localStorage.getItem(hideAvatarKey)}
-  />,
-  container,
-);
+render(<CreateGame userPrefs={getUserPrefs()} />, container);

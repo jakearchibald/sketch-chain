@@ -47,11 +47,15 @@ const HomePage: FunctionalComponent<Props> = ({ user, userGames }) => {
           </div>
           <div class="create-game-container hero-button-container">
             <CreateGame
-              userDetails={
-                // Create a new object to avoid extra server info leaking into the client
-                user ? { name: user.name, picture: user.picture } : undefined
+              userPrefs={
+                user
+                  ? {
+                      name: user.name,
+                      picture: user.picture,
+                      hideAvatar: false,
+                    }
+                  : undefined
               }
-              hideAvatar={false}
             />
           </div>
           {user && userGames && userGames.length ? (

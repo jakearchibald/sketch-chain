@@ -66,3 +66,9 @@ export interface ActiveTurnData {
   inPlayThread: Thread | null;
   lastTurnInThread: Turn | null;
 }
+
+export interface UserPrefs {
+  name: string;
+  picture: string | undefined;
+  hideAvatar: boolean;
+}

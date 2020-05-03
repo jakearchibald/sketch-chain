@@ -10,14 +10,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h, Component, createRef } from 'preact';
+import { h, Component, createRef, Fragment } from 'preact';
 import { createPortal } from 'preact/compat';
 
-import { Game, Player, GameState } from 'shared/types';
+import { Game, Player, GameState, UserPrefs } from 'shared/types';
 import Modal, { modalContainer } from 'shared/components/modal';
+import isServer from 'consts:isServer';
+import UserOptions from 'shared/components/user-options';
+import { setUserPrefs } from 'shared/utils/user-prefs';
+
+const showJoinModalSessionKey = 'show-join';
 
 interface Props {
   game: Game;
+  userPrefs?: UserPrefs;
   userPlayer?: Player;
   warnOnLeave?: boolean;
 }
@@ -27,6 +33,7 @@ interface State {
   leaving: boolean;
   confirmCancel: boolean;
   confirmLeave: boolean;
+  showJoinDialog: boolean;
   error?: { title: string; text: string };
 }
 
@@ -36,24 +43,35 @@ export default class ChangeParticipation extends Component<Props, State> {
     leaving: false,
     confirmCancel: false,
     confirmLeave: false,
+    showJoinDialog: false,
   };
 
   private _cancelForm = createRef<HTMLFormElement>();
 
+  private _onLoginSubmit = () => {
+    sessionStorage.setItem(showJoinModalSessionKey, '1');
+  };
+
   private _onJoinSubmit = async (event: Event) => {
-    // If there's no user, let them navigate through the login process
-    if (!this.props.userPlayer) return;
     event.preventDefault();
+    this._clearModals();
     this.setState({ joining: true });
+    const formData = new URLSearchParams([
+      ...new FormData(event.target as HTMLFormElement),
+    ] as [string, string][]);
+
+    setUserPrefs(
+      formData.get('player-name') as string,
+      !!formData.get('hide-avatar'),
+    );
 
     try {
-      const response = await fetch('join?json=1', { method: 'POST' });
-      const data = await response.json();
+      const response = await fetch('join?json=1', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (data.redirectTo) {
-        location.href = data.redirectTo;
-        return;
-      }
+      const data = await response.json();
 
       if (data.error) {
         this.setState({
@@ -73,6 +91,10 @@ export default class ChangeParticipation extends Component<Props, State> {
     } finally {
       this.setState({ joining: false });
     }
+  };
+
+  private _onJoinGameClick = () => {
+    this.setState({ showJoinDialog: true });
   };
 
   private _onLeaveSubmit = async (event: Event) => {
@@ -97,6 +119,7 @@ export default class ChangeParticipation extends Component<Props, State> {
     this.setState({
       confirmCancel: false,
       confirmLeave: false,
+      showJoinDialog: false,
       error: undefined,
     });
   };
@@ -133,19 +156,46 @@ export default class ChangeParticipation extends Component<Props, State> {
     }
   };
 
+  componentDidMount() {
+    const showJoinDialog = !!sessionStorage.getItem(showJoinModalSessionKey);
+    if (!showJoinDialog) return;
+    sessionStorage.removeItem(showJoinModalSessionKey);
+    this.setState({ showJoinDialog: true });
+  }
+
   render(
-    { game, userPlayer }: Props,
-    { joining, leaving, confirmCancel, confirmLeave, error }: State,
+    { game, userPlayer, userPrefs }: Props,
+    {
+      joining,
+      leaving,
+      confirmCancel,
+      confirmLeave,
+      error,
+      showJoinDialog,
+    }: State,
   ) {
     return [
       !userPlayer ? (
-        game.state === GameState.Open && (
-          <form action="join" method="POST" onSubmit={this._onJoinSubmit}>
-            <button class="button hero-button" disabled={joining}>
-              Join
-            </button>
+        game.state === GameState.Open &&
+        (!userPrefs ? (
+          <form
+            method="POST"
+            action="/auth/login"
+            onSubmit={this._onLoginSubmit}
+            style={{ visibility: isServer ? 'hidden' : '' }}
+          >
+            <button class="button hero-button">Join</button>
           </form>
-        )
+        ) : (
+          <button
+            class="button hero-button"
+            style={{ visibility: isServer ? 'hidden' : '' }}
+            onClick={this._onJoinGameClick}
+            disabled={joining}
+          >
+            Join
+          </button>
+        ))
       ) : userPlayer.isAdmin ? (
         <form
           ref={this._cancelForm}
@@ -162,6 +212,28 @@ export default class ChangeParticipation extends Component<Props, State> {
           </button>
         </form>
       ),
+      showJoinDialog &&
+        createPortal(
+          <form action="join" method="POST" onSubmit={this._onJoinSubmit}>
+            <Modal
+              title="Options"
+              content={<UserOptions userPrefs={userPrefs!} />}
+              buttons={[
+                <button
+                  type="button"
+                  class="button"
+                  onClick={this._clearModals}
+                >
+                  Cancel
+                </button>,
+                <button type="submit" class="button button-good">
+                  Join game
+                </button>,
+              ]}
+            />
+          </form>,
+          modalContainer!,
+        ),
       confirmCancel &&
         createPortal(
           <Modal

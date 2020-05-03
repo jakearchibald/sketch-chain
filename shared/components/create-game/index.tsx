@@ -16,20 +16,18 @@ import { createPortal } from 'preact/compat';
 import isServer from 'consts:isServer';
 import Modal, { modalContainer } from 'shared/components/modal';
 import UserOptions from 'shared/components/user-options';
+import { UserPrefs } from 'shared/types';
+import { setUserPrefs } from 'shared/utils/user-prefs';
 
 const showCreateModalSessionKey = 'show-create';
 
 interface Props {
-  userDetails?: { name: string; picture?: string };
-  hideAvatar: boolean;
+  userPrefs?: UserPrefs;
 }
 
 interface State {
   showCreateDialog: boolean;
 }
-
-export const preferredNameKey = 'preferredName';
-export const hideAvatarKey = 'hideAvatar';
 
 export default class CreateGame extends Component<Props, State> {
   state: State = {
@@ -50,8 +48,7 @@ export default class CreateGame extends Component<Props, State> {
 
   private _onCreateFormSubmit = (event: Event) => {
     const data = new FormData(event.target as HTMLFormElement);
-    localStorage.setItem(preferredNameKey, data.get('player-name') as string);
-    localStorage.setItem(hideAvatarKey, data.get('hide-avatar') as string);
+    setUserPrefs(data.get('player-name') as string, !!data.get('hide-avatar'));
   };
 
   componentDidMount() {
@@ -63,8 +60,8 @@ export default class CreateGame extends Component<Props, State> {
     this.setState({ showCreateDialog: true });
   }
 
-  render({ userDetails, hideAvatar }: Props, { showCreateDialog }: State) {
-    if (!userDetails) {
+  render({ userPrefs }: Props, { showCreateDialog }: State) {
+    if (!userPrefs) {
       return (
         <form
           method="POST"
@@ -95,12 +92,7 @@ export default class CreateGame extends Component<Props, State> {
             >
               <Modal
                 title="Options"
-                content={
-                  <UserOptions
-                    userDetails={userDetails}
-                    hideAvatar={hideAvatar}
-                  />
-                }
+                content={<UserOptions userPrefs={userPrefs} />}
                 buttons={[
                   <button
                     type="button"

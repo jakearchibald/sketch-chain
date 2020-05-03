@@ -12,10 +12,10 @@
  */
 import { h, Component, Fragment } from 'preact';
 import placeholderAvatar from 'asset-url:shared/assets/avatar.svg';
+import { UserPrefs } from 'shared/types';
 
 interface Props {
-  userDetails: { name: string; picture?: string };
-  hideAvatar: boolean;
+  userPrefs: UserPrefs;
 }
 
 interface State {
@@ -23,13 +23,10 @@ interface State {
   playerName: string;
 }
 
-export const preferredNameKey = 'preferredName';
-export const hideAvatarKey = 'hideAvatar';
-
 export default class UserOptions extends Component<Props, State> {
   state: State = {
-    hideAvatar: this.props.hideAvatar,
-    playerName: this.props.userDetails ? this.props.userDetails.name : '',
+    hideAvatar: this.props.userPrefs.hideAvatar,
+    playerName: this.props.userPrefs ? this.props.userPrefs.name : '',
   };
 
   private _onHideAvatarChange = () => {
@@ -44,18 +41,18 @@ export default class UserOptions extends Component<Props, State> {
     });
   };
 
-  render({ userDetails }: Props, { hideAvatar, playerName }: State) {
+  render({ userPrefs }: Props, { hideAvatar, playerName }: State) {
     return (
       <Fragment>
         <p>Choose your name:</p>
         <div class="user-appearance">
-          {userDetails.picture && !hideAvatar ? (
+          {userPrefs.picture && !hideAvatar ? (
             <img
               width="40"
               height="40"
               alt=""
-              src={`${userDetails.picture}=s${40}-c`}
-              srcset={`${userDetails.picture}=s${80}-c 2x`}
+              src={`${userPrefs.picture}=s${40}-c`}
+              srcset={`${userPrefs.picture}=s${80}-c 2x`}
               class="avatar"
             />
           ) : (
@@ -77,7 +74,7 @@ export default class UserOptions extends Component<Props, State> {
             required
           />
         </div>
-        {userDetails.picture && (
+        {userPrefs.picture && (
           <p>
             <label>
               <input

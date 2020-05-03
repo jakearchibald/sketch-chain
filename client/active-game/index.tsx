@@ -16,11 +16,13 @@ import WS from 'client/ws';
 import IncompleteGame from 'shared/components/incomplete-game';
 import { GameState, GamePageData } from 'shared/types';
 import { SimpleChange } from 'shared/utils/simple-change';
+import { getUserPrefs } from 'shared/utils/user-prefs';
 
 const loginInfo = document.querySelector('.login-info');
 const userId = loginInfo
   ? (loginInfo as HTMLElement).dataset.userId!
   : undefined;
+const userPrefs = getUserPrefs();
 
 let dataTarget: SimpleChange<GamePageData>;
 
@@ -43,6 +45,7 @@ class ClientComponent extends Component<{}, GamePageData> {
   render(_: {}, { game, inPlayThread, lastTurnInThread }: GamePageData) {
     return (
       <IncompleteGame
+        userPrefs={userPrefs}
         userId={userId}
         game={game}
         inPlayThread={inPlayThread}

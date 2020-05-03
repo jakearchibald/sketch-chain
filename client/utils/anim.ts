@@ -69,7 +69,7 @@ export function animate(
   document.head.append(style);
   el.style.animation = `${duration}ms ${easing} ${delay}ms ${fill} ${animName}`;
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     function completeListener(event: AnimationEvent) {
       if (event.target !== el) return;
       resolve();

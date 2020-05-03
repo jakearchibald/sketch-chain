@@ -31,7 +31,6 @@ import {
   getActiveTurnDataForPlayer,
 } from 'server/data';
 import GamePage from 'server/components/pages/game';
-import { getLoginRedirectURL } from 'server/auth';
 import {
   requireSameOrigin,
   pingClients,
@@ -62,57 +61,32 @@ router.get('/:gameId', (req, res) =>
   res.redirect(301, `${req.baseUrl}/${req.params.gameId}/`),
 );
 
-async function joinGameRoute(req: Request, res: Response): Promise<void> {
-  const user = req.session!.user;
-  const json = !!req.query.json;
-
-  // Redirect to login if user isn't logged in
-  if (!user) {
-    req.session!.allowGetJoinGame = true;
-
-    if (json) {
-      res.status(200).json({
-        redirectTo: getLoginRedirectURL(req.originalUrl),
-      });
-      return;
-    }
-
-    res.redirect(301, getLoginRedirectURL(req.originalUrl));
-    return;
-  }
-
-  try {
-    await joinGame(req.params.gameId, user);
-  } catch (err) {
-    sendErrorResponse(res, err, json);
-    return;
-  }
-
-  if (json) {
-    res.status(200).json({ ok: true });
-    return;
-  }
-  res.redirect(303, `/game/${req.params.gameId}/`);
-}
-
-// GET requests to join games are only allowed if we've just sent the user
-// through the login flow. See joinGameRoute.
-router.get(
-  '/:gameId/join',
-  expressAsyncHandler((req, res) => {
-    if (!req.session!.allowGetJoinGame) {
-      res.status(403).send('Must use POST request to join game');
-      return;
-    }
-    req.session!.allowGetJoinGame = false;
-    joinGameRoute(req, res);
-  }),
-);
-
 router.post(
   '/:gameId/join',
   requireSameOrigin(),
-  expressAsyncHandler(joinGameRoute),
+  requireLogin(),
+  urlencoded({ extended: false }),
+  expressAsyncHandler(async (req, res) => {
+    const user = req.session!.user!;
+    const json = !!req.query.json;
+    try {
+      await joinGame(
+        req.params.gameId,
+        user,
+        req.body['player-name'],
+        !!req.body['hide-avatar'],
+      );
+    } catch (err) {
+      sendErrorResponse(res, err, json);
+      return;
+    }
+
+    if (json) {
+      res.status(200).json({ ok: true });
+      return;
+    }
+    res.redirect(303, `/game/${req.params.gameId}/`);
+  }),
 );
 
 router.post(

@@ -56,10 +56,6 @@ Back up current drawing into localstorage? Means it's not lost on refresh.
 
 Next step:
   From privacy team:
-    Make it clear how a user will appear in the game.
-      Let them pick a different name.
-      Let them disable the avatar.
-      Cache these in localstorage for future games.
     Admin can delete completed games.
     When player leaves a game:
       If complete:
@@ -69,7 +65,6 @@ Next step:
     Avoid sending user id to client. Use player id instead.
   Landscape mobile
   Client notifications should only appear on desktop.
-    And there's something funky going on with how it appears and disappears.
   Game state should identify admin
   Reconnect websocket on page show?
   Don't wrap text on complete page
