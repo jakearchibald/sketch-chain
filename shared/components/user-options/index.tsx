@@ -73,6 +73,7 @@ export default class UserOptions extends Component<Props, State> {
             value={playerName}
             onInput={this._onNameInput}
             name="player-name"
+            maxLength={35}
             required
           />
         </div>
