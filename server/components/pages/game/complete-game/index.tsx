@@ -14,10 +14,28 @@ import { h, FunctionalComponent } from 'preact';
 
 import CompleteDrawing from 'shared/components/complete-drawing';
 import { Game, TurnType } from 'shared/types';
+import placeholderAvatar from 'asset-url:shared/assets/avatar.svg';
 
 interface Props {
   game: Game;
 }
+
+interface AvatarProps {
+  avatar: string | null;
+}
+
+const Avatar: FunctionalComponent<AvatarProps> = ({ avatar }) =>
+  avatar ? (
+    <img
+      width="40"
+      height="40"
+      alt=""
+      src={`${avatar}=s${40}-c`}
+      srcset={`${avatar}=s${80}-c 2x`}
+    />
+  ) : (
+    <img width="40" height="40" alt="" src={placeholderAvatar} />
+  );
 
 const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
   <div class="complete-game" data-game-id={game.id}>
@@ -38,15 +56,7 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
               return (
                 <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
                   <div class="avatar-description">
-                    {player.avatar && (
-                      <img
-                        width="40"
-                        height="40"
-                        alt=""
-                        src={`${player.avatar}=s${40}-c`}
-                        srcset={`${player.avatar}=s${80}-c 2x`}
-                      />
-                    )}
+                    <Avatar avatar={player.avatar} />
                     <div class="avatar-description-description">
                       <p>{player.name} skipped their turn.</p>
                     </div>
@@ -59,15 +69,7 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
               return (
                 <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
                   <div class="avatar-description">
-                    {player.avatar && (
-                      <img
-                        width="40"
-                        height="40"
-                        alt=""
-                        src={`${player.avatar}=s${40}-c`}
-                        srcset={`${player.avatar}=s${80}-c 2x`}
-                      />
-                    )}
+                    <Avatar avatar={player.avatar} />
                     <div class="avatar-description-description">
                       <p>{player.name} picked the topic.</p>
                     </div>
@@ -81,15 +83,7 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
                 <div>
                   <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
                     <div class="avatar-description">
-                      {player.avatar && (
-                        <img
-                          width="40"
-                          height="40"
-                          alt=""
-                          src={`${player.avatar}=s${40}-c`}
-                          srcset={`${player.avatar}=s${80}-c 2x`}
-                        />
-                      )}
+                      <Avatar avatar={player.avatar} />
                       <div class="avatar-description-description">
                         <p>{player.name} tried to draw that:</p>
                       </div>
@@ -118,15 +112,7 @@ const CompleteGame: FunctionalComponent<Props> = ({ game }) => (
             return (
               <div class={`content-padding ${i === 0 ? '' : 'content-hr'}`}>
                 <div class="avatar-description">
-                  {player.avatar && (
-                    <img
-                      width="40"
-                      height="40"
-                      alt=""
-                      src={`${player.avatar}=s${40}-c`}
-                      srcset={`${player.avatar}=s${80}-c 2x`}
-                    />
-                  )}
+                  <Avatar avatar={player.avatar} />
                   <div class="avatar-description-description">
                     <p>
                       {player.name} thought that was "{turn.data}"
