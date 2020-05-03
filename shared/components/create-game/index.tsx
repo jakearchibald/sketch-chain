@@ -14,8 +14,8 @@ import { h, Component, Fragment } from 'preact';
 import { createPortal } from 'preact/compat';
 
 import isServer from 'consts:isServer';
-import placeholderAvatar from 'asset-url:shared/assets/avatar.svg';
 import Modal, { modalContainer } from 'shared/components/modal';
+import UserOptions from 'shared/components/user-options';
 
 const showCreateModalSessionKey = 'show-create';
 
@@ -26,8 +26,6 @@ interface Props {
 
 interface State {
   showCreateDialog: boolean;
-  hideAvatar: boolean;
-  playerName: string;
 }
 
 export const preferredNameKey = 'preferredName';
@@ -36,8 +34,6 @@ export const hideAvatarKey = 'hideAvatar';
 export default class CreateGame extends Component<Props, State> {
   state: State = {
     showCreateDialog: false,
-    hideAvatar: this.props.hideAvatar,
-    playerName: this.props.userDetails ? this.props.userDetails.name : '',
   };
 
   private _onLoginSubmit = () => {
@@ -58,18 +54,6 @@ export default class CreateGame extends Component<Props, State> {
     localStorage.setItem(hideAvatarKey, data.get('hide-avatar') as string);
   };
 
-  private _onHideAvatarChange = () => {
-    this.setState((state) => ({
-      hideAvatar: !state.hideAvatar,
-    }));
-  };
-
-  private _onNameInput = (event: Event) => {
-    this.setState({
-      playerName: (event.target as HTMLInputElement).value,
-    });
-  };
-
   componentDidMount() {
     const showCreateDialog = !!sessionStorage.getItem(
       showCreateModalSessionKey,
@@ -79,10 +63,7 @@ export default class CreateGame extends Component<Props, State> {
     this.setState({ showCreateDialog: true });
   }
 
-  render(
-    { userDetails }: Props,
-    { showCreateDialog, hideAvatar, playerName }: State,
-  ) {
+  render({ userDetails, hideAvatar }: Props, { showCreateDialog }: State) {
     if (!userDetails) {
       return (
         <form
@@ -115,51 +96,10 @@ export default class CreateGame extends Component<Props, State> {
               <Modal
                 title="Options"
                 content={
-                  <Fragment>
-                    <p>Choose your name:</p>
-                    <div class="user-appearance">
-                      {userDetails.picture && !hideAvatar ? (
-                        <img
-                          width="40"
-                          height="40"
-                          alt=""
-                          src={`${userDetails.picture}=s${40}-c`}
-                          srcset={`${userDetails.picture}=s${80}-c 2x`}
-                          class="avatar"
-                        />
-                      ) : (
-                        <img
-                          width="40"
-                          height="40"
-                          alt=""
-                          src={placeholderAvatar}
-                          class="avatar"
-                        />
-                      )}
-                      <input
-                        type="text"
-                        class="large-text-input"
-                        value={playerName}
-                        onInput={this._onNameInput}
-                        name="player-name"
-                        required
-                      />
-                    </div>
-                    {userDetails.picture && (
-                      <p>
-                        <label>
-                          <input
-                            type="checkbox"
-                            checked={hideAvatar}
-                            name="hide-avatar"
-                            value="1"
-                            onInput={this._onHideAvatarChange}
-                          />{' '}
-                          Hide avatar
-                        </label>
-                      </p>
-                    )}
-                  </Fragment>
+                  <UserOptions
+                    userDetails={userDetails}
+                    hideAvatar={hideAvatar}
+                  />
                 }
                 buttons={[
                   <button
