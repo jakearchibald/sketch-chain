@@ -74,7 +74,7 @@ router.all('/test-login', (req, res) => {
     return;
   }
 
-  const id = req.query.id || createFakeLoginName();
+  const id = (req.query.id as string | undefined) || createFakeLoginName();
 
   req.session!.user = {
     email: 'foo@bar.com',
@@ -89,7 +89,9 @@ router.all('/test-login', (req, res) => {
 router.post('/login', requireSameOrigin(), (req, res) => {
   res.redirect(
     301,
-    getLoginRedirectURL(req.query.state || req.get('Referer') || '/'),
+    getLoginRedirectURL(
+      (req.query.state as string | undefined) || req.get('Referer') || '/',
+    ),
   );
 });
 
@@ -104,7 +106,7 @@ router.get(
   '/oauth2callback',
   asyncHandler(async (req, res) => {
     const oauth2Client = createClient();
-    const result = await oauth2Client.getToken(req.query.code);
+    const result = await oauth2Client.getToken(req.query.code as string);
     oauth2Client.setCredentials(result.tokens);
     const verifyResult = await oauth2Client.verifyIdToken({
       idToken: result.tokens.id_token!,
@@ -120,6 +122,6 @@ router.get(
       picture: (loginData!.picture || '').replace('=s96-c', ''),
     };
 
-    res.redirect(301, req.query.state || '/');
+    res.redirect(301, (req.query.state as string | undefined) || '/');
   }),
 );
