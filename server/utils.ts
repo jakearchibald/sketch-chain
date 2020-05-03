@@ -21,6 +21,7 @@ import { origin } from './config';
 
 export class NotFoundError extends Error {}
 export class ForbiddenError extends Error {}
+export class BadRequestError extends Error {}
 
 export function abortHandshake(
   socket: Socket,
@@ -92,14 +93,17 @@ export function randomItem<T>(array: T[]): T {
 const group = [...teams, ...collections];
 
 export function createProbablyUniqueName() {
-  return () =>
-    [
-      randomItem(predicates),
-      randomItem(objects),
-      randomItem(group),
-      randomItem(predicates),
-      randomItem(group),
-    ].join('-');
+  return [
+    randomItem(predicates),
+    randomItem(objects),
+    randomItem(group),
+    randomItem(predicates),
+    randomItem(group),
+  ].join('-');
+}
+
+export function createFakeLoginName() {
+  return [randomItem(predicates), randomItem(objects)].join('-');
 }
 
 export function sendErrorResponse(

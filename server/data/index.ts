@@ -18,6 +18,7 @@ import {
   createProbablyUniqueName,
   ForbiddenError,
   NotFoundError,
+  BadRequestError,
 } from 'server/utils';
 import {
   GameState,
@@ -52,11 +53,25 @@ function gameChanged(gameId: string) {
   emitter.emit('gamechange', gameId);
 }
 
+function sanitisePlayerName(name: string): string {
+  const sanitisedName = name.trim().slice(0, 35);
+  if (!sanitisedName) {
+    throw new BadRequestError('Player name cannot be empty');
+  }
+  return sanitisedName;
+}
+
 /**
  * @param user Current user.
+ * @param playerName User's chosen name.
+ * @param hideAvatar Has the user chosen to hide their avatar?
  * @returns ID of the new game.
  */
-export async function createGame(user: UserSession): Promise<string> {
+export async function createGame(
+  user: UserSession,
+  playerName: string,
+  hideAvatar: boolean,
+): Promise<string> {
   const openGames = await countUncompleteGamesOwnedByUser(user.id);
 
   if (openGames > maxOpenGamesPerUser) {
@@ -64,6 +79,8 @@ export async function createGame(user: UserSession): Promise<string> {
       `Too many open games. Please finish some of your other games, or cancel them.`,
     );
   }
+
+  const sanitisedPlayerName = sanitisePlayerName(playerName);
 
   while (true) {
     const id = createProbablyUniqueName();
@@ -75,8 +92,8 @@ export async function createGame(user: UserSession): Promise<string> {
 
     await game.createPlayer({
       userId: user.id,
-      name: user.name,
-      avatar: user.picture,
+      name: sanitisedPlayerName,
+      avatar: hideAvatar ? undefined : user.picture,
       isAdmin: true,
     });
 
@@ -201,7 +218,18 @@ export async function getActiveTurnDataForPlayer(
   };
 }
 
-export async function joinGame(id: string, user: UserSession): Promise<void> {
+/**
+ * @param id Game ID.
+ * @param user Current user.
+ * @param playerName User's chosen name.
+ * @param hideAvatar Has the user chosen to hide their avatar?
+ */
+export async function joinGame(
+  id: string,
+  user: UserSession,
+  playerName: string,
+  hideAvatar: boolean,
+): Promise<void> {
   const game = await getDBGame(id);
   if (!game) throw new NotFoundError('Cannot find game');
   if (game.state !== GameState.Open) {
@@ -210,10 +238,12 @@ export async function joinGame(id: string, user: UserSession): Promise<void> {
   // Quick exit if player already exists
   if (game.players!.some((player) => player.userId === user.id)) return;
 
+  const sanitisedPlayerName = sanitisePlayerName(playerName);
+
   await game.createPlayer({
     userId: user.id,
-    name: user.name,
-    avatar: user.picture,
+    name: sanitisedPlayerName,
+    avatar: hideAvatar ? undefined : user.picture,
     isAdmin: false,
   });
 
@@ -411,7 +441,7 @@ function sanitizeDrawingData(json: string): string {
   try {
     imageData = JSON.parse(json);
   } catch (err) {
-    throw Error('Invalid JSON');
+    throw new BadRequestError('Invalid JSON');
   }
 
   const width = Math.round(Number(imageData.width));

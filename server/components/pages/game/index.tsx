@@ -71,6 +71,15 @@ const GamePage: FunctionalComponent<Props> = ({
             <CompleteGame game={game} />
           ) : (
             <IncompleteGame
+              userPrefs={
+                user
+                  ? {
+                      name: user.name,
+                      picture: user.picture,
+                      hideAvatar: false,
+                    }
+                  : undefined
+              }
               userId={user && user.id}
               game={game}
               inPlayThread={inPlayThread}

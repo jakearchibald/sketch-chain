@@ -11,13 +11,15 @@
  * limitations under the License.
  */
 import { h, Component } from 'preact';
-import { Game, Player } from 'shared/types';
+import { Game, Player, UserPrefs } from 'shared/types';
 import { minPlayers } from 'shared/config';
 import ChangeParticipation from '../change-participation';
 import WhatIsThis from 'shared/components/what-is-this';
 import NotificationToggle from '../notification-toggle';
+import PlayerList from 'shared/components/player-list';
 
 interface Props {
+  userPrefs?: UserPrefs;
   userPlayer?: Player;
   game: Game;
 }
@@ -40,7 +42,7 @@ export default class PendingGame extends Component<Props, State> {
     this.setState({ starting: false });
   };
 
-  render({ game, userPlayer }: Props, { starting }: State) {
+  render({ game, userPlayer, userPrefs }: Props, { starting }: State) {
     return (
       <div>
         {userPlayer?.isAdmin ? (
@@ -58,7 +60,11 @@ export default class PendingGame extends Component<Props, State> {
           <WhatIsThis />
         )}
         <div class="hero-button-container">
-          <ChangeParticipation game={game} userPlayer={userPlayer} />
+          <ChangeParticipation
+            game={game}
+            userPlayer={userPlayer}
+            userPrefs={userPrefs}
+          />
           {userPlayer?.isAdmin && game.players!.length >= minPlayers && (
             <form action="start" method="POST" onSubmit={this._onStartSubmit}>
               <button class="button hero-button" disabled={starting}>
@@ -68,30 +74,7 @@ export default class PendingGame extends Component<Props, State> {
           )}
           {userPlayer && <NotificationToggle />}
         </div>
-        <div class="content-box content-sized">
-          <h2 class="content-box-title">Players</h2>
-          <div class="content-padding">
-            <ul class="player-list">
-              {game.players!.map((player) => (
-                <li key={player.userId}>
-                  {player.avatar && (
-                    <img
-                      width="40"
-                      height="40"
-                      alt=""
-                      class="avatar"
-                      src={`${player.avatar}=s${40}-c`}
-                      srcset={`${player.avatar}=s${80}-c 2x`}
-                    />
-                  )}
-                  <div class="name">
-                    {player.name} {player.isAdmin && '(admin)'}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <PlayerList game={game} userPlayer={userPlayer} />
       </div>
     );
   }

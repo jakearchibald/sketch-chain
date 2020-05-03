@@ -12,7 +12,7 @@
  */
 import { join as joinPath } from 'path';
 
-import { Router, Request, Response } from 'express';
+import { Router, urlencoded } from 'express';
 import { h } from 'preact';
 import expressAsyncHandler from 'express-async-handler';
 
@@ -20,7 +20,7 @@ import { renderPage } from 'server/render';
 import { requireSameOrigin, sendErrorResponse } from 'server/utils';
 import HomePage from 'server/components/pages/home';
 import { createGame, getUsersGames } from 'server/data';
-import { getLoginRedirectURL, requireAdmin } from 'server/auth';
+import { requireAdmin, requireLogin } from 'server/auth';
 
 export const router: Router = Router({
   strict: true,
@@ -37,40 +37,25 @@ router.get(
   }),
 );
 
-async function createGameRoute(req: Request, res: Response): Promise<void> {
-  const user = req.session!.user;
-  if (!user) {
-    req.session!.allowGetCreateGame = true;
-    res.redirect(301, getLoginRedirectURL('/create-game'));
-    return;
-  }
-
-  try {
-    const gameId = await createGame(user);
-    res.redirect(303, `/game/${gameId}/`);
-  } catch (err) {
-    sendErrorResponse(res, err, false);
-  }
-}
-
-// GET requests to create games are only allowed if we've just sent the user
-// through the login flow. See createGameRoute.
-router.get(
-  '/create-game',
-  expressAsyncHandler((req, res) => {
-    if (!req.session!.allowGetCreateGame) {
-      res.status(403).send('Must use POST request to create game');
-      return;
-    }
-    req.session!.allowGetCreateGame = false;
-    createGameRoute(req, res);
-  }),
-);
-
 router.post(
   '/create-game',
   requireSameOrigin(),
-  expressAsyncHandler(createGameRoute),
+  requireLogin(),
+  urlencoded({ extended: false }),
+  expressAsyncHandler(async (req, res) => {
+    const user = req.session!.user!;
+
+    try {
+      const gameId = await createGame(
+        user,
+        req.body['player-name'],
+        !!req.body['hide-avatar'],
+      );
+      res.redirect(303, `/game/${gameId}/`);
+    } catch (err) {
+      sendErrorResponse(res, err, false);
+    }
+  }),
 );
 
 router.get('/dl-db', requireAdmin(), (req, res) => {
