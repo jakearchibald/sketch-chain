@@ -15,30 +15,32 @@ import { h, render, Component } from 'preact';
 import WS from 'client/ws';
 import IncompleteGame from 'shared/components/incomplete-game';
 import { GameState, GamePageData } from 'shared/types';
+import { SimpleChange } from 'shared/utils/simple-change';
 
 const loginInfo = document.querySelector('.login-info');
 const userId = loginInfo
   ? (loginInfo as HTMLElement).dataset.userId!
   : undefined;
 
-let updateListener: ((message: GamePageData) => void) | undefined;
-const setUpdateListener = (callback: (message: GamePageData) => void) =>
-  (updateListener = callback);
+let dataTarget: SimpleChange<GamePageData>;
 
-class ClientComponent extends Component<GamePageData, GamePageData> {
-  state: GamePageData = { ...this.props };
+class ClientComponent extends Component<{}, GamePageData> {
+  state: GamePageData = { ...dataTarget.value };
+
+  private _onDataReceived = (data: GamePageData) => {
+    this.setState(data);
+  };
 
   constructor(props: GamePageData) {
     super(props);
-    setUpdateListener((data: GamePageData) => {
-      this.setState(data);
-    });
+    dataTarget.listen(this._onDataReceived);
   }
 
-  render(
-    _: GamePageData,
-    { game, inPlayThread, lastTurnInThread }: GamePageData,
-  ) {
+  componentWillUnmount() {
+    dataTarget.unlisten(this._onDataReceived);
+  }
+
+  render(_: {}, { game, inPlayThread, lastTurnInThread }: GamePageData) {
     return (
       <IncompleteGame
         userId={userId}
@@ -67,11 +69,13 @@ new WS('ws', (message) => {
 
   // If this isn't our first update, just call the callback.
   // ClientComponent will handle the rest.
-  if (updateListener) {
-    updateListener(data);
+  if (dataTarget) {
+    dataTarget.change(data);
     return;
   }
 
+  dataTarget = new SimpleChange(data);
+
   // This is only called once, for the first render.
-  render(<ClientComponent {...(data as GamePageData)} />, gameEl);
+  render(<ClientComponent />, gameEl);
 });
