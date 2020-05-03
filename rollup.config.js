@@ -68,7 +68,7 @@ export default async function ({ watch }) {
             constsPlugin({ isServer: false }),
             ...commonPlugins(),
             resolve(),
-            terser({ module: true }),
+            terser({ module: true, mangle: { properties: { regex: /^_/ } } }),
           ],
         },
         {
