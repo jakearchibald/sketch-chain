@@ -28,7 +28,7 @@
     "lint-staged": "10.2.2",
     "nodemon": "2.0.3",
     "pointer-tracker": "2.3.0",
-    "postcss": "7.0.28",
+    "postcss": "8.2.10",
     "postcss-nested": "4.2.1",
     "postcss-url": "8.0.0",
     "prettier": "2.0.5",
