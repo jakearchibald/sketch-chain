@@ -52,7 +52,7 @@
     "session-file-store": "1.4.0",
     "simplify-js": "1.2.4",
     "sqlite3": "4.2.0",
-    "ws": "7.2.5"
+    "ws": "7.4.6"
   },
   "husky": {
     "hooks": {
